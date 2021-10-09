@@ -64,11 +64,11 @@ class App extends React.PureComponent<any, AppState> {
   }
   onBeforeInput(event?: any) {
     
-    event?.preventDefault()
+    // event?.preventDefault()
 
-    console.log("onBeforeInput", event)
-    console.log("onBeforeInput2", event.nativeEvent.srcElement.innerHTML)
-    return
+    // console.log("onBeforeInput", event)
+    // console.log("onBeforeInput2", event.nativeEvent.srcElement.innerHTML)
+    // return
   }
   contentFilter() {
     const contentTopDOM = this.textInput.current
