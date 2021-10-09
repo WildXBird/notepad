@@ -1,0 +1,120 @@
+*,
+*:before,
+*:after {
+  box-sizing: border-box;
+}
+
+input:focus,
+textarea:focus,
+.App-content:focus,
+input:focus-visible,
+textarea:focus-visible,
+.App-content:focus-visible {
+  outline: none;
+}
+::selection {
+  background:#0078D7; 
+  color:#fff;
+}
+
+:root {
+  --state-bar-height: 21px;
+}
+
+html {
+  height: 100%;
+}
+
+body {
+  height: 100%;
+}
+
+#root {
+  height: 100%;
+
+}
+
+.App {
+  text-align: center;
+  border-top: #F0F0F0 2px solid;
+  height: 100%;
+  overflow: hidden;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-content {
+  /* background-color: #fff; */
+  /* min-height: 100vh; */
+  display: block;
+  /* flex-direction: column; */
+  /* align-items: center; */
+  /* justify-content: center; */
+  /* font-size: calc(10px + 2vmin); */
+  /* color: white; */
+  text-align: left;
+  padding-left: 3px;
+  padding-right: 6px;
+  height: calc(100% - var(--state-bar-height));
+  width: 100%;
+  overflow: scroll;
+  white-space: nowrap;
+
+}
+
+.App-content>* {
+  white-space: nowrap;
+}
+
+.App-state {
+  user-select: none;
+  display: block;
+  border-top: #D7D7D7 1px solid;
+  padding-top: 1px 0;
+  background-color: #F0F0F0;
+  height: var(--state-bar-height);
+  line-height: var(--state-bar-height);
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  justify-content: flex-end;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.App-state>div {
+  display: inline-block;
+}
+
+
+
+
+
+
+
+
+
+
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
