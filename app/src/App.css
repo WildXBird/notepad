@@ -12,9 +12,10 @@ textarea:focus-visible,
 .App-content:focus-visible {
   outline: none;
 }
+
 ::selection {
-  background:#0078D7; 
-  color:#fff;
+  background: #0078D7;
+  color: #fff;
 }
 
 :root {
@@ -71,15 +72,18 @@ body {
   width: 100%;
   overflow: scroll;
   white-space: nowrap;
-  white-space: pre-wrap;
+  border-width: 0px;
+  resize: none;
+  font-size: var(--settings-font-size);
+  line-height: var(--settings-line-height);
 
 }
 
-.App-content>div {
+/* .App-content>div {
   white-space: nowrap;
   font-size:var(--settings-font-size);
   min-height:var(--settings-line-height);
-}
+} */
 
 .App-state {
   user-select: none;

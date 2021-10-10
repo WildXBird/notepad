@@ -1,5 +1,6 @@
 import * as React from 'react';
 import './App.css';
+import './font.css';
 import { getFontList } from "./function/getFontList"
 import { diffChars } from "diff"
 import { type } from 'os';
@@ -25,10 +26,12 @@ type AppState = {
   }[]
 }
 class App extends React.PureComponent<any, AppState> {
-  textInput: React.RefObject<HTMLElement>
+  textInput: React.RefObject<HTMLTextAreaElement> | undefined
+  fontTemp: React.RefObject<HTMLDivElement> | undefined
   constructor(props: {}) {
     super(props);
     this.textInput = React.createRef();
+    this.fontTemp = React.createRef();
     this.state = {
       posY: 1,
       posX: 1,
@@ -37,51 +40,38 @@ class App extends React.PureComponent<any, AppState> {
   }
 
 
-  componentDidMount() {
-    getFontList()
-
-
-  }
-  renderTextArea() {
-    if (this.textInput.current) {
-      console.error("textInput is not Ready")
+  async componentDidMount() {
+    if (!this.fontTemp || !this.fontTemp.current) {
       return
     }
-    console.log("lines", this.state.lines)
-    const newArea = Array.from(this.state.lines, (item, id) => {
-      for (let element of item.elements) {
-        // element.id
-        // element.text
-      }
-      return `<div>${item}</div>`
-    })
-    if (this.textInput.current) {
-      // this.textInput.current.innerHTML = newArea.join("")
-    }
+    const fontInstalled = await getFontList(this.fontTemp.current)
+    console.log("fontInstalled", fontInstalled)
 
   }
+
   render() {
-    console.log("lines", this.state.lines)
-    setTimeout(() => {
-      this.renderTextArea()
-    }, 0);
     return (
       <div className="App">
-        <div id="temp" style={{ height: 0, overflow: "hidden", background: "red", width: "100%" }} />
-        <section
+        <div id="tempTop" style={{
+          // height: 0,
+          overflow: "hidden", background: "red", width: "100%"
+        }} >
+          <div id="temp" />
+          <div id="fontTemp" ref={this.fontTemp} />
+        </div>
+        <textarea
+          // @ts-ignore
           ref={this.textInput}
-          id="txt1"
           onClick={this.freshCursorPosition.bind(this)}
           onInput={this.freshCursorPosition.bind(this)}
-          onBeforeInput={(event) => { console.log("onBeforeInput", event) }}
-          onPaste={(event) => { this.onBeforeInput(event.clipboardData, event) }}
-          // onDrop={(event) => { this.onBeforeInput(event.dataTransfer, event) }}
-          onDrop={(event) => { event.preventDefault() }}
           className="App-content"
           contentEditable="true"
           spellCheck="false"
         />
         <footer className="App-state">
+          <div style={{ width: 250 }}>
+           {"点击 "}
+          </div>
           <div style={{ width: 250 }}>
             {`第 ${this.state.posY} 行，第 ${this.state.posX} 列`}
           </div>
@@ -111,120 +101,7 @@ class App extends React.PureComponent<any, AppState> {
   //   // this.contentFilter()
   //   this.freshCursorPosition()
   // }
-  onBeforeInput(DataTransfer: DataTransfer, event: React.FormEvent<HTMLElement>) {
-    console.log("onBeforeInputCLASS.selection", getSelection())
-    console.log("onBeforeInputCLASS", event)
-    // if (this.state.posY !== 1) {
-    event.preventDefault()
-    // }
 
-    // const pldata2: string = DataTransfer.getData("text/plain")
-    // console.log("pldata2", pldata2)
-    const pldata: string = DataTransfer.getData('text/html')
-    console.log("pldata",)
-    const domparser = new DOMParser();
-    const doc = domparser.parseFromString(pldata, "text/html")
-    console.log("body", doc)
-    const newTexts = this.newContentParser(doc.body.innerHTML)
-    console.log("newTexts", newTexts)
-
-    let newLines: AppState["lines"] = []
-    for (let text of newTexts) {
-      newLines.push({
-        elements: [{
-          text: text,
-          id: GUID(),
-          type: "text"
-        }],
-        lid: GUID()
-      })
-    }
-
-
-    this.setState({
-      lines: newLines
-    })
-
-  }
-  newContentParser(html: string): string[] {
-    function escapeHtmlText(html: string) {
-      var text = document.createTextNode(html);
-      var p = document.createElement('p');
-      p.appendChild(text);
-      return p.innerHTML;
-    }
-    function childNodeTextsEscape(html: string): string {
-      const paragraph = document.createElement('aside');
-      paragraph.innerHTML = html
-      const walker = document.createTreeWalker(paragraph);
-
-      let node = walker.nextNode();
-      while (node !== null) {
-        if (node.nodeType === 3) {
-          // @ts-ignore
-          if (typeof (node.data) === "string") {
-            // @ts-ignore
-            let nodeData: string = node.data
-            nodeData = escapeHtmlText(nodeData)
-            nodeData = nodeData.replaceAll("\\n", "&wrap;")
-            nodeData = nodeData.replaceAll(" ", "&nbsp;")
-            nodeData = nodeData.replaceAll("  ", "&nbsp;&nbsp;")
-            // @ts-ignore
-            node.data = nodeData
-          }
-
-        }
-        node = walker.nextNode();
-      }
-      console.log("paragraph", paragraph)
-      return paragraph.innerHTML;
-    }
-    function childNodeTextsSymbolRecover(html: string): string {
-      const paragraph = document.createElement('aside');
-      paragraph.innerHTML = html
-      const walker = document.createTreeWalker(paragraph);
-
-      let node = walker.nextNode();
-      while (node !== null) {
-        if (node.nodeType === 3) {
-          // @ts-ignore
-          if (typeof (node.data) === "string") {
-            // @ts-ignore
-            let nodeData: string = node.data
-            nodeData = nodeData.replaceAll('&wrap;', "\\n")
-            // @ts-ignore
-            node.data = nodeData
-          }
-        }
-        node = walker.nextNode();
-      }
-      console.log("paragraph", paragraph)
-      return paragraph.innerHTML;
-    }
-    function htmlAddBRs(html: string): string {
-      html = html.replaceAll("\n", "<br>")
-      return html
-    }
-    const newLines = []
-
-
-    // var paragraph = document.createElement('aside');
-    var paragraph = document.getElementById("temp")
-    if (!paragraph) {
-      return []
-    }
-    paragraph.innerHTML = (html)
-    // console.log("p2", "paragraph", paragraph)
-    paragraph.innerHTML = childNodeTextsEscape(html)
-
-    newLines.push(...paragraph.innerText.split("\n"))
-
-    // paragraph.innerHTML = htmlAddBRs(paragraph.innerText)
-    // paragraph.innerHTML = childNodeTextsSymbolRecover(paragraph.innerHTML)
-    // console.log("p3", "childNodeTextsSymbolRecover", paragraph.innerHTML)
-    // console.log("p4", "paragraph", paragraph)
-    return newLines
-  }
   freshCursorPosition() {
     const newPos = this.getCurrentCursorPosition()
     this.setState({
