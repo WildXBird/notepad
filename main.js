@@ -1,7 +1,10 @@
-const { app, BrowserWindow, Menu } = require('electron')
+const { app, BrowserWindow, Menu,contextBridge,ipcRenderer,nativeTheme  } = require('electron')
 
-
-
+// contextBridge.exposeInMainWorld('darkMode', {
+//   toggle: () => ipcRenderer.invoke('dark-mode:toggle'),
+//   system: () => ipcRenderer.invoke('dark-mode:system')
+// })
+nativeTheme.themeSource = "light"
 
 const isMac = process.platform === 'darwin'
 

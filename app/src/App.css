@@ -19,6 +19,8 @@ textarea:focus-visible,
 
 :root {
   --state-bar-height: 21px;
+  --settings-font-size: 16px;
+  --settings-line-height: 22px;
 }
 
 html {
@@ -39,6 +41,7 @@ body {
   border-top: #F0F0F0 2px solid;
   height: 100%;
   overflow: hidden;
+  -webkit-user-drag: none;
 }
 
 .App-logo {
@@ -68,11 +71,14 @@ body {
   width: 100%;
   overflow: scroll;
   white-space: nowrap;
+  white-space: pre-wrap;
 
 }
 
-.App-content>* {
+.App-content>div {
   white-space: nowrap;
+  font-size:var(--settings-font-size);
+  min-height:var(--settings-line-height);
 }
 
 .App-state {
