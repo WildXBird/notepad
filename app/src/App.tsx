@@ -1,10 +1,11 @@
 import * as React from 'react';
 import './App.css';
-import './font.css';
 import { getFontList } from "./function/getFontList"
+import { md5 } from "./function/hash"
 import { diffChars } from "diff"
 import { type } from 'os';
 import { setInterval } from 'timers';
+import { createInvisibleDOM, removeDOM } from "./function/createInvisibleDOM"
 
 const GUID = function () {
   function S4() {
@@ -26,7 +27,7 @@ type AppState = {
   }[]
 }
 class App extends React.PureComponent<any, AppState> {
-  textInput: React.RefObject<HTMLTextAreaElement> | undefined
+  textInput: React.RefObject<HTMLDivElement> | undefined
   fontTemp: React.RefObject<HTMLDivElement> | undefined
   constructor(props: {}) {
     super(props);
@@ -44,7 +45,7 @@ class App extends React.PureComponent<any, AppState> {
     if (!this.fontTemp || !this.fontTemp.current) {
       return
     }
-    const fontInstalled = await getFontList(this.fontTemp.current)
+    const fontInstalled = await getFontList()
     console.log("fontInstalled", fontInstalled)
 
   }
@@ -59,20 +60,20 @@ class App extends React.PureComponent<any, AppState> {
           <div id="temp" />
           <div id="fontTemp" ref={this.fontTemp} />
         </div>
-        <textarea
-          // @ts-ignore
+        <section
           ref={this.textInput}
           onClick={this.freshCursorPosition.bind(this)}
-          onInput={this.freshCursorPosition.bind(this)}
+          onKeyDown={this.freshCursorPosition.bind(this)}
+          onInput={this.afterInput.bind(this)}
           className="App-content"
           contentEditable="true"
           spellCheck="false"
         />
         <footer className="App-state">
-          <div style={{ width: 250 }} onClick={()=>{
-            
+          <div style={{ width: 250 }} onClick={() => {
+
           }}>
-           {"点击 "}
+            {"点击 "}
           </div>
           <div style={{ width: 250 }}>
             {`第 ${this.state.posY} 行，第 ${this.state.posX} 列`}
@@ -99,20 +100,185 @@ class App extends React.PureComponent<any, AppState> {
       </div>
     );
   }
-  // onInput(event: React.FormEvent<HTMLElement>) {
-  //   // this.contentFilter()
-  //   this.freshCursorPosition()
-  // }
+  afterInput(event: React.FormEvent<HTMLElement>) {
+    this.contentFilter()
+    // setTimeout(() => {
+    //   this.contentFilter()
+    // }, 0);
+    this.freshCursorPosition()
+  }
+  contentFilter() {
+    function escapeHtmlText(html: string) {
+      var text = document.createTextNode(html);
+      var p = document.createElement('p');
+      p.appendChild(text);
+      return p.innerHTML;
+    }
+    function childNodeTextsEscape(html: string): string {
+      const paragraph = document.createElement('aside');
+      paragraph.innerHTML = html
+      const walker = document.createTreeWalker(paragraph);
 
+      let node = walker.nextNode();
+      while (node !== null) {
+        if (node.nodeType === 3) {
+          // @ts-ignore
+          if (typeof (node.data) === "string") {
+            // @ts-ignore
+            let nodeData: string = node.data
+            nodeData = escapeHtmlText(nodeData)
+            nodeData = nodeData.replaceAll("\\n", "&wrap;")
+            nodeData = nodeData.replaceAll(" ", "&nbsp;")
+            nodeData = nodeData.replaceAll("  ", "&nbsp;&nbsp;")
+            // @ts-ignore
+            node.data = nodeData
+          }
+
+        }
+        node = walker.nextNode();
+      }
+      return paragraph.innerHTML;
+    }
+    function childNodeTextsSymbolRecover(html: string): string {
+      const paragraph = document.createElement('aside');
+      paragraph.innerHTML = html
+      const walker = document.createTreeWalker(paragraph);
+
+      let node = walker.nextNode();
+      while (node !== null) {
+        if (node.nodeType === 3) {
+          // @ts-ignore
+          if (typeof (node.data) === "string") {
+            // @ts-ignore
+            let nodeData: string = node.data
+            nodeData = nodeData.replaceAll('&wrap;', "\\n")
+            // @ts-ignore
+            node.data = nodeData
+          }
+        }
+        node = walker.nextNode();
+      }
+      console.log("paragraph", paragraph)
+      return paragraph.innerHTML;
+    }
+    function htmlAddBRs(html: string): string {
+      html = html.replaceAll("\n", "<br>")
+      return html
+    }
+    function isNodeNeed2BeUpdate(thisElement: HTMLElement): boolean {
+      const thisMD5 = thisElement.getAttribute("inner_html_md5") || ""
+      const newMD5 = md5(thisElement.innerHTML)
+      if (thisMD5 === newMD5) {
+        return false
+      }
+      thisElement.setAttribute("inner_html_md5", newMD5)
+
+      if (thisElement.nodeName !== "DIV") {
+        return true
+      }
+
+      const textEscaped = escapeHtmlText(thisElement.innerText)
+      const innerHTML = thisElement.innerHTML
+      if (textEscaped === innerHTML) {
+        return false
+      }
+      //检查子节点
+      const childNodes = thisElement.childNodes
+      for (let node of childNodes) {
+        if (Node.TEXT_NODE === node.nodeType) {
+          //文字节点略过，看看其他的node
+        } else if (Node.ELEMENT_NODE !== node.nodeType) {
+          console.log("treu", 1, node.nodeType)
+          return true
+        } else if (node.nodeName === "SPAN") {
+          const childSpanElement: HTMLElement = node as unknown as HTMLElement
+          const childSpanElementTextEscaped = escapeHtmlText(childSpanElement.innerText)
+          const childSpanElementInnerHTML = childSpanElement.innerHTML
+          if (childSpanElementTextEscaped !== childSpanElementInnerHTML) {
+            console.log("treu", 2)
+            return true
+
+          }
+        } else if (node.nodeName === "BR") {
+
+        } else {
+          console.log("treu", 3, node.nodeName)
+
+          return true
+
+        }
+      }
+
+      return false
+    }
+
+    if (!this.textInput || !this.textInput.current) {
+      console.error('textInput not ready')
+      return
+
+    }
+    // const childNodes = getSelection()
+    const textInputDom = this.textInput.current
+    const childNodes = textInputDom.childNodes
+    const removeList: Node[] = []
+    const addLinesList: {
+      before: Node,
+      text: string
+    }[] = []
+    for (let node of childNodes) {
+      if (Node.ELEMENT_NODE !== node.nodeType) {
+        removeList.push(node)
+      } else {
+        const thisElement: HTMLElement = node as unknown as HTMLElement
+        if (isNodeNeed2BeUpdate(thisElement)) {
+          removeList.push(node)
+          console.log("isNodeNeed2BeUpdate", true, thisElement)
+          const tempDom = createInvisibleDOM()
+          tempDom.innerHTML = childNodeTextsEscape(thisElement.innerHTML)
+          const newLines = []
+          console.log("tempDom.innerText",tempDom.innerText,tempDom.innerText.split("\n"))
+          newLines.push(...tempDom.innerText.split("\n"))
+          console.log("newLines", newLines)
+          for (let text of newLines) {
+            addLinesList.push({
+              before: thisElement,
+              text: childNodeTextsSymbolRecover(text)
+            })
+          }
+          removeDOM(tempDom)
+        } else {
+          // console.log("NOT", "isNodeNeed2BeUpdate", thisElement)
+        }
+
+      }
+    }
+    return
+    // //！先insert后remove
+    for (let line of addLinesList) {
+      var paragraph = document.createElement('div');
+      paragraph.innerHTML = line.text
+      textInputDom.insertBefore(paragraph, line.before);
+    }
+    for (let dom of removeList) {
+      dom.parentNode?.removeChild(dom)
+    }
+
+  }
   freshCursorPosition() {
     const newPos = this.getCurrentCursorPosition()
     this.setState({
       posX: newPos.x,
       posY: newPos.y,
     })
+    setTimeout(() => {
+      const newPos = this.getCurrentCursorPosition()
+      this.setState({
+        posX: newPos.x,
+        posY: newPos.y,
+      })
+    }, 100);
   }
   getCurrentCursorPosition(): { x: number, y: number } {
-    console.log("getCurrentursorPosition")
     let X = 1
     let Y = 1
     if (this.textInput) {
@@ -142,6 +308,7 @@ class App extends React.PureComponent<any, AppState> {
       x: X, y: Y
     }
   }
+
 }
 
 

@@ -79,11 +79,16 @@ body {
 
 }
 
-/* .App-content>div {
+.App-content>div {
   white-space: nowrap;
-  font-size:var(--settings-font-size);
-  min-height:var(--settings-line-height);
-} */
+  font-size: var(--settings-font-size);
+  min-height: var(--settings-line-height);
+}
+
+/* 因为不会计入行数所以禁用BR */
+.App-content>br {
+  display: none;
+}
 
 .App-state {
   user-select: none;
