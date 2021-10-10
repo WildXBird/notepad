@@ -42,21 +42,41 @@ class App extends React.PureComponent<any, AppState> {
 
 
   }
+  renderTextArea() {
+    if (this.textInput.current) {
+      console.error("textInput is not Ready")
+      return
+    }
+    console.log("lines", this.state.lines)
+    const newArea = Array.from(this.state.lines, (item, id) => {
+      for (let element of item.elements) {
+        // element.id
+        // element.text
+      }
+      return `<div>${item}</div>`
+    })
+    if (this.textInput.current) {
+      // this.textInput.current.innerHTML = newArea.join("")
+    }
 
+  }
   render() {
+    console.log("lines", this.state.lines)
+    setTimeout(() => {
+      this.renderTextArea()
+    }, 0);
     return (
       <div className="App">
         <div id="temp" style={{ height: 0, overflow: "hidden", background: "red", width: "100%" }} />
-        <textarea
-         // @ts-ignore
+        <section
           ref={this.textInput}
           id="txt1"
           onClick={this.freshCursorPosition.bind(this)}
           onInput={this.freshCursorPosition.bind(this)}
-          // onBeforeInput={(event) => { console.log("onBeforeInput", event) }}
-          // onPaste={(event) => { this.onBeforeInput(event.clipboardData, event) }}
+          onBeforeInput={(event) => { console.log("onBeforeInput", event) }}
+          onPaste={(event) => { this.onBeforeInput(event.clipboardData, event) }}
           // onDrop={(event) => { this.onBeforeInput(event.dataTransfer, event) }}
-          // onDrop={(event) => { event.preventDefault() }}
+          onDrop={(event) => { event.preventDefault() }}
           className="App-content"
           contentEditable="true"
           spellCheck="false"
@@ -101,7 +121,7 @@ class App extends React.PureComponent<any, AppState> {
     // const pldata2: string = DataTransfer.getData("text/plain")
     // console.log("pldata2", pldata2)
     const pldata: string = DataTransfer.getData('text/html')
-    console.log("pldata",pldata)
+    console.log("pldata",)
     const domparser = new DOMParser();
     const doc = domparser.parseFromString(pldata, "text/html")
     console.log("body", doc)
