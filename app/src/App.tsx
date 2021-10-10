@@ -69,7 +69,9 @@ class App extends React.PureComponent<any, AppState> {
           spellCheck="false"
         />
         <footer className="App-state">
-          <div style={{ width: 250 }}>
+          <div style={{ width: 250 }} onClick={()=>{
+            
+          }}>
            {"点击 "}
           </div>
           <div style={{ width: 250 }}>
