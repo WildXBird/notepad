@@ -1,58 +1,3 @@
-import { createInvisibleDOM, removeDOM } from "./createInvisibleDOM"
-
-
-export async function getFontList() {
-    const element = createInvisibleDOM()
-    if (!document.getElementById("ZeroWidthFont-install")) {
-        const dom = document.createElement("style");
-        dom.innerHTML = `@font-face {
-    font-family: 'ZeroWidth';      
-    src: url(${ZeroWidthFontFile}) format('woff');
-}
-.font-test-span{
-    font-size: 64px;
-    font-weight: 400;
-}`
-        document.head.appendChild(dom);
-    }
-
-    element.innerHTML = ""
-    let waitingCheckDomList: HTMLSpanElement[] = []
-    let outterDiv = document.createElement("div");
-
-    for (let fontInfo of frontList) {
-        const fontCSSName = fontInfo.en_name
-        let newDiv = document.createElement("span");
-        newDiv.style.fontFamily = `"${fontCSSName}", "ZeroWidth", Arial`
-        newDiv.className = "font-test-span"
-        newDiv.innerHTML = "A"
-        newDiv.setAttribute("en_name", fontInfo.en_name)
-        newDiv.setAttribute("cn_name", fontInfo.cn_name)
-        outterDiv.appendChild(newDiv);
-        waitingCheckDomList.push(newDiv)
-    }
-
-    element.appendChild(outterDiv);
-    const installedFontEnNameList: Set<{
-        en_name: string
-        cn_name: string
-    }> = new Set()
-
-    await document.fonts.ready
-    for (let dom of waitingCheckDomList) {
-        if (dom.offsetWidth > 5) {
-            installedFontEnNameList.add({
-                en_name: dom.getAttribute("en_name") || "null??",
-                cn_name: dom.getAttribute("cn_name") || "null??"
-            })
-        }
-    }
-    removeDOM(element)
-    return [...installedFontEnNameList]
-}
-
-
-const ZeroWidthFontFile = "data:font/woff;charset=utf-8;base64,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"
 
 const frontList = [
     {
@@ -1957,45 +1902,506 @@ const frontList = [
     }
 ]
 
-export type fontWeight = "bolder" | "bold" | "normal" | "lighter"
-export function isSupportFontWeight(fontFamily: string, fontWeight: fontWeight) {
-    let defaultFontWeight: fontWeight = "normal"
-    if (fontWeight.toLowerCase() === defaultFontWeight.toLowerCase()) {
-        return true;
-    }
 
-    let defaultLetter = 'a整*';
-    let defaultFontSize = 64;
-
-    // 使用该字体绘制的canvas
-    let width = 64;
-    let height = 64;
-    let canvas = document.createElement('canvas')
-    let context = canvas.getContext('2d')
-    if (!context) { return false }
-    canvas.width = width;
-    canvas.height = height;
-
-
-    // 全局一致的绘制设定
-    context.textAlign = 'center';
-    context.fillStyle = 'black';
-    context.textBaseline = 'middle';
-
-
-    let getFontData = (fontWeight: fontWeight, context: CanvasRenderingContext2D) => {
-        context.clearRect(0, 0, width, height);
-
-        // document.fonts.check("bold 16px Arial", "text");
-
-        context.font = `${fontWeight} ${defaultFontSize}px ${fontFamily}`;
-
-        context.fillText(defaultLetter, width / 2, height / 2);
-        let data = context.getImageData(0, 0, width, height).data;
-        return [].slice.call(data).filter(function (value) {
-            return value !== 0;
-        });
-    };
-
-    return getFontData(defaultFontWeight, context).join('') !== getFontData(fontWeight, context).join('');
-};
+Agency FB
+Algerian
+Arial
+Arial Black
+Arial Narrow
+Arial Rounded MT Bold
+Bahnschrift
+Bahnschrift Condensed
+Bahnschrift Light
+Bahnschrift Light Condensed
+Bahnschrift Light SemiCondensed
+Bahnschrift SemiBold
+Bahnschrift SemiBold Condensed
+Bahnschrift SemiBold SemiConden
+Bahnschrift SemiCondensed
+Bahnschrift SemiLight
+Bahnschrift SemiLight Condensed
+Bahnschrift SemiLight SemiConde
+Baskerville Old Face
+Bauhaus 93
+Bell MT
+Berlin Sans FB
+Berlin Sans FB Demi
+Bernard MT Condensed
+Blackadder ITC
+Bodoni MT
+Bodoni MT Black
+Bodoni MT Condensed
+Bodoni MT Poster Compressed
+Book Antiqua
+Bookman Old Style
+Bookshelf Symbol 7
+Bradley Hand ITC
+Britannic Bold
+Broadway
+Brush Script MT
+Calibri
+Calibri Light
+Californian FB
+Calisto MT
+Cambria
+Cambria Math
+Candara
+Candara Light
+Cascadia Code PL
+Cascadia Code PL ExtraLight
+Cascadia Code PL Light
+Cascadia Code PL SemiBold
+Cascadia Code PL SemiLight
+Castellar
+Centaur
+Century
+Century Gothic
+Century Schoolbook
+Chiller
+Colonna MT
+Comic Sans MS
+Consolas
+Constantia
+Cooper Black
+Copperplate Gothic Bold
+Copperplate Gothic Light
+Corbel
+Corbel Light
+Courier New
+Curlz MT
+Dubai
+Dubai Light
+Dubai Medium
+Ebrima
+Edwardian Script ITC
+Elephant
+Engravers MT
+Eras Bold ITC
+Eras Demi ITC
+Eras Light ITC
+Eras Medium ITC
+Felix Titling
+Footlight MT Light
+Forte
+Franklin Gothic Book
+Franklin Gothic Demi
+Franklin Gothic Demi Cond
+Franklin Gothic Heavy
+Franklin Gothic Medium
+Franklin Gothic Medium Cond
+Freestyle Script
+French Script MT
+Gabriola
+Gadugi
+Garamond
+Georgia
+Gigi
+Gill Sans MT
+Gill Sans MT Condensed
+Gill Sans MT Ext Condensed Bold
+Gill Sans Ultra Bold
+Gill Sans Ultra Bold Condensed
+Gloucester MT Extra Condensed
+Goudy Old Style
+Goudy Stout
+Haettenschweiler
+Harlow Solid Italic
+Harrington
+High Tower Text
+HoloLens MDL2 Assets
+Impact
+Imprint MT Shadow
+Informal Roman
+Ink Free
+Javanese Text
+Jokerman
+Juice ITC
+Kristen ITC
+Kunstler Script
+Lato
+Lato Light
+Lato Semibold
+Leelawadee
+Leelawadee UI
+Leelawadee UI Semilight
+Lucida Bright
+Lucida Calligraphy
+Lucida Console
+Lucida Fax
+Lucida Handwriting
+Lucida Sans
+Lucida Sans Typewriter
+Lucida Sans Unicode
+Magneto
+Maiandra GD
+Malgun Gothic
+Malgun Gothic Semilight
+Mamelon
+Mamelon 3 Hi
+Mamelon 3.5 Hi
+Mamelon 4 Hi
+Mamelon 5 Hi
+Marlett
+Matura MT Script Capitals
+Microsoft Himalaya
+Microsoft JhengHei UI
+Microsoft JhengHei UI Light
+Microsoft New Tai Lue
+Microsoft PhagsPa
+Microsoft Sans Serif
+Microsoft Tai Le
+Microsoft Uighur
+Microsoft YaHei UI
+Microsoft YaHei UI Light
+Microsoft Yi Baiti
+Mistral
+Modern No. 20
+Mongolian Baiti
+Monotype Corsiva
+MS Gothic
+MS Outlook
+MS PGothic
+MS Reference Sans Serif
+MS Reference Specialty
+MS UI Gothic
+MV Boli
+Myanmar Text
+Niagara Engraved
+Niagara Solid
+Nirmala UI
+Nirmala UI Semilight
+OCR A Extended
+Old English Text MT
+Onyx
+Palace Script MT
+Palatino Linotype
+Papyrus
+Parchment
+Perpetua
+Perpetua Titling MT
+Playbill
+Poor Richard
+Pristina
+Rage Italic
+Ravie
+Rockwell
+Rockwell Condensed
+Rockwell Extra Bold
+Script MT Bold
+Segoe MDL2 Assets
+Segoe Print
+Segoe Script
+Segoe UI
+Segoe UI Black
+Segoe UI Emoji
+Segoe UI Historic
+Segoe UI Light
+Segoe UI Semibold
+Segoe UI Semilight
+Segoe UI Symbol
+Showcard Gothic
+SimSun-ExtB
+Sitka Banner
+Sitka Display
+Sitka Heading
+Sitka Small
+Sitka Subheading
+Sitka Text
+Snap ITC
+Stencil
+Sylfaen
+Symbol
+Tahoma
+Tempus Sans ITC
+Times New Roman
+Trebuchet MS
+Tw Cen MT
+Tw Cen MT Condensed
+Tw Cen MT Condensed Extra Bold
+Verdana
+Viner Hand ITC
+Vivaldi
+Vladimir Script
+Webdings
+Wide Latin
+Wingdings
+Wingdings 2
+Wingdings 3
+Yu Gothic
+Yu Gothic Light
+Yu Gothic Medium
+Yu Gothic UI
+Yu Gothic UI Light
+Yu Gothic UI Semibold
+Yu Gothic UI Semilight
+仿宋
+华康仿宋体W3-A
+华康俪金黑W8
+华康俪金黑W8(P)
+华康勘亭流W9
+华康勘亭流W9(P)
+华康娃娃体W5
+华康娃娃体W5(P)
+华康宋体W12(P)
+华康少女文字W5
+华康少女文字W5(P)
+华康布丁体W12
+华康布丁体W12(P)
+华康彩带体
+华康海报体W12
+华康海报体W12(P)
+华康瘦金体W3
+华康瘦金体W3(P)
+华康简仿宋
+华康简宋
+华康简标题宋
+华康简楷
+华康简综艺
+华康简黑
+华康雅宋体W9
+华康雅宋体W9(P)
+华康魏碑W7
+华康魏碑W7(P)
+华康黑体W5-A
+华康龙门石碑W9
+华康龙门石碑W9(P)
+华文中宋
+华文仿宋
+华文宋体
+华文彩云
+华文新魏
+华文楷体
+华文琥珀
+华文细黑
+华文行楷
+华文隶书
+宋体
+幼圆
+微軟正黑體
+微軟正黑體 Light
+微软雅黑
+微软雅黑 Light
+新宋体
+新細明體-ExtB
+方正姚体
+方正舒体
+更纱黑体 Mono SC Nerd
+楷体
+等线
+等线 Light
+細明體-ExtB
+細明體_HKSCS-ExtB
+華康POP1體W5
+華康POP1體W5(P)
+華康POP1體W7
+華康POP1體W7(P)
+華康POP1體W9
+華康POP1體W9(P)
+華康POP2體W9
+華康POP2體W9(P)
+華康POP3體W12
+華康POP3體W12(P)
+華康中圓體
+華康中圓體(P)
+華康中明體
+華康中明體(P)
+華康中特圓體
+華康中特圓體(P)
+華康中黑體
+華康中黑體(P)
+華康乾隆行楷框線體03
+華康乾隆行楷框線體03(P)
+華康交通工具篇
+華康人物篇
+華康仿宋體W4
+華康仿宋體W4(P)
+華康儷中宋
+華康儷中宋(P)
+華康儷中黑
+華康儷中黑(P)
+華康儷特圓
+華康儷特圓(P)
+華康儷粗圓
+華康儷粗圓(P)
+華康儷粗宋
+華康儷粗宋(P)
+華康儷粗黑
+華康儷粗黑(P)
+華康儷細黑
+華康儷細黑(P)
+華康儷金黑
+華康儷金黑(P)
+華康儷雅宋
+華康儷黑 Std W5
+華康兒風體W3
+華康兒風體W3(P)
+華康勘亭流
+華康勘亭流(P)
+華康古印體
+華康可愛動物1
+華康可愛動物2
+華康可愛動物3
+華康可愛英文篇
+華康唐風隸
+華康唐風隸(P)
+華康圓緣斗雲體(P)
+華康圓緣體W2
+華康圓緣體W2(P)
+華康圓緣體W4
+華康圓緣體W4(P)
+華康圓體注音
+華康圓體破音一
+華康圓體破音三
+華康圓體破音二
+華康墨字體
+華康墨字體(P)
+華康天氣篇
+華康妙風體W2
+華康妙風體W2(P)
+華康娃娃體
+華康娃娃體(P)
+華康宗楷體
+華康寶風體
+華康巧風體W1
+華康巧風體W1(P)
+華康布丁體
+華康布丁體(P)
+華康平劇體W7
+華康平劇體W7(P)
+華康康楷體
+華康弘一楷書W3
+華康弘一楷書W3(P)
+華康彩帶體
+華康彩帶體(P)
+華康徽宗宮體
+華康徽宗宮體W5
+華康徽宗宮體W5(P)
+華康撲克篇
+華康文徵明體
+華康新特圓體
+華康新特圓體(P)
+華康新特明體
+華康新特明體(P)
+華康新特黑體
+華康新特黑體(P)
+華康新篆體
+華康新篆體(P)
+華康新篆體外字集
+華康方圓體
+華康昆蟲篇
+華康星座篇
+華康服飾篇
+華康棒棒體W5
+華康棒棒體W5(P)
+華康植物篇
+華康榜書體W8
+華康榜書體W8(P)
+華康標誌篇
+華康標識篇
+華康歐陽詢體
+華康正顏楷體W5
+華康正顏楷體W5(P)
+華康正顏楷體W7
+華康正顏楷體W7(P)
+華康正顏楷體W9
+華康正顏楷體W9(P)
+華康流線體
+華康流線體(P)
+華康流葉體
+華康流葉體(P)
+華康流隸體
+華康流隸體(P)
+華康流風體
+華康海報體W12
+華康海報體W12(P)
+華康海洋生物篇
+華康漆隸體W5
+華康漆隸體W5(P)
+華康特粗圓體
+華康特粗明體
+華康特粗楷體
+華康特粗楷體(P)
+華康生活雜貨篇
+華康瘦金體
+華康瘦金體(P)
+華康相撲體
+華康相撲體(P)
+華康睡人1
+華康睡人2
+華康硬黑體
+華康秀風體
+華康童童體
+華康童童體(P)
+華康竹風體
+華康粗圓體
+華康粗圓體(P)
+華康細圓體
+華康細圓體(P)
+華康細明體
+華康細明體(P)
+華康細黑體
+華康細黑體(P)
+華康綜藝體
+華康芸風體W3
+華康芸風體W3(P)
+華康華綜體
+華康蔬菜篇
+華康蚪風體
+華康行書體(P)
+華康行楷體W5
+華康行楷體W5(P)
+華康談楷體
+華康談楷體W5
+華康談楷體W5(P)
+華康貓咪篇
+華康超圓體
+華康超圓體(P)
+華康超明體
+華康超明體(P)
+華康超特圓體
+華康超特圓體(P)
+華康超特明體
+華康超特明體(P)
+華康超特楷體
+華康超特楷體(P)
+華康超黑體
+華康超黑體(P)
+華康辦公用具篇
+華康連連體
+華康運動篇
+華康郭泰碑
+華康醫療用品篇
+華康采風體
+華康金文體
+華康鋼筆體W2
+華康鋼筆體W2(P)
+華康鐵線龍門W3
+華康鐵線龍門W3(P)
+華康隸書體W7
+華康隸書體W7(P)
+華康隸風體W2
+華康隸風體W2(P)
+華康雅宋體
+華康雅宋體(P)
+華康雅風體
+華康電器篇
+華康面具篇
+華康音樂篇
+華康食物篇
+華康飾藝體W5
+華康飾藝體W5(P)
+華康香港標準宋體
+華康香港標準宋體(P)
+華康香港標準楷書
+華康香港標準楷書(P)
+華康魏碑體
+華康魏碑體(P)
+華康魏碑體外字集
+華康魔風體W4
+華康魔風體W4(P)
+華康龍門石碑
+華康龍門石碑(P)
+隶书
+黑体
+뗘녤ꓖꑫꓥ꙲圶
+뗘녤ꛦ껑엩

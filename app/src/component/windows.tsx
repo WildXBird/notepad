@@ -1,17 +1,21 @@
 import * as React from 'react';
 import { getFontList } from "../function/getFontList"
-import "./window.less"
+import "./windows.less"
 
-type AppState = {
+type WindowState = {
 
 }
-export class Window extends React.PureComponent<any, AppState> {
+type WindowProps = {
+  width?: number
+  height?: number
+}
+export class Window extends React.PureComponent<WindowProps, WindowState> {
   WINDOW: React.RefObject<HTMLDivElement>
   WINDOW_title: React.RefObject<HTMLDivElement>
   moving: boolean
   mouseMovingTitleBarOffsetX: number
   mouseMovingTitleBarOffsetY: number
-  constructor(props: {}) {
+  constructor(props: WindowProps) {
     super(props);
     this.WINDOW = React.createRef();
     this.WINDOW_title = React.createRef();
@@ -49,22 +53,18 @@ export class Window extends React.PureComponent<any, AppState> {
     return (
       <div
         ref={this.WINDOW}
+        className={"WINDOWS-window"}
         style={{
-          height: 200, width: 200, background: "#d9d9d9", userSelect: "none",
-          position: "fixed",
-          left: 0,
-          top: 0,
-          border:"1px #707070 solid",
-          filter: "drop-shadow(0px 0px 8px #8b8b8b)"
+          height: this.props.height || 400,
+          width: this.props.width || 300,
         }}>
-        <div
-          ref={this.WINDOW_title}
-          style={{
-            background: "red"
-          }}
-        >
-          title
+        <div ref={this.WINDOW_title} className={"WINDOWS-title"}>
+          {"字体"}
         </div>
+        <div className={"WINDOWS-content"}>
+          {this.props.children}
+        </div>
+
       </div>
     )
   }
@@ -97,6 +97,67 @@ export class Window extends React.PureComponent<any, AppState> {
 
 
   }
+
+
+}
+
+export type SelectionData<T> = {
+  value: T
+  text: string
+}
+type SelectProps<T> = {
+  data: SelectionData<T>[]
+  defaultValue?: T
+  renderStyle: (data: SelectionData<T>) => React.CSSProperties
+  style?: React.CSSProperties
+  onChange?: (data: SelectionData<T>) => void
+}
+type SelectState<T> = {
+  selected?: T
+}
+export class Select<T> extends React.PureComponent<SelectProps<T>, SelectState<T>> {
+  constructor(props: SelectProps<T>) {
+    super(props);
+    this.state = {
+
+    }
+  }
+
+
+  componentDidMount() {
+    if (this.props.defaultValue) {
+      this.setState({ selected: this.props.defaultValue })
+    }
+  }
+
+  render() {
+    let render = (item: SelectionData<T>) => {
+      const renderStyle = this.props.renderStyle(item) || {}
+
+      return <div className={`${this.state.selected === item.value ? "WINDOWS-selection-selected" : ""} WINDOWS-selection`}
+        style={{ ...renderStyle }}
+        onClick={() => {
+          this.setState({
+            selected: item.value
+          })
+          if (this.props.onChange) {
+            this.props.onChange(item)
+          }
+        }}
+        key={typeof (item.value) === "string" ? String(item.value) : undefined}
+      >
+        {item.text}
+      </div>
+    }
+console.log("this.props.data",this.props.data)
+    return (
+
+      <div className={"WINDOWS-select"} style={this.props.style} >
+        {Array.from(this.props.data, render)}
+      </div>
+    )
+  }
+
 
 
 }

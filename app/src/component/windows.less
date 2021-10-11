@@ -1,0 +1,63 @@
+.WINDOWS-window {
+    background: #d9d9d9;
+    user-select: none;
+    position: fixed;
+    left: 0;
+    top: 0;
+    border: 1px #707070 solid;
+    filter: drop-shadow(0px 0px 8px #8b8b8b);
+
+    --themeColor: #0078D7;
+    --themeContentColor: #000;
+    --themeContentBackgroundColor: #F0F0F0;
+    --themeTitleColor: #000;
+    --themeTitleBackgroundColor: #FFFFFF;
+
+    --titleHeight: 30px;
+
+    .WINDOWS-title {
+        height: var(--titleHeight);
+        background-color: var(--themeTitleBackgroundColor);
+        color: var(--themeTitleColor);
+        padding-left: 7px;
+        line-height: 30px;
+        font-size: 12px;
+    }
+
+    .WINDOWS-content {
+        background-color: var(--themeContentBackgroundColor);
+        height: calc(100% - var(--titleHeight));
+    }
+
+    &.alert {
+        filter: drop-shadow(10px 10px 8px #8b8b8b);
+    }
+}
+
+
+
+.WINDOWS-select {
+    --themeColor: #0077D5;
+    --themeSelectedColor: #fff;
+
+    // height: 137px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    border: 1px #828790 solid;
+
+    .WINDOWS-selection {
+        line-height: 19px;
+        height: 19px;
+        margin-left: 1px;
+        margin-right: 1px;
+        width: calc(100% - 2px);
+        overflow: hidden;
+        white-space: nowrap;
+        font-size: 14px;
+
+        &.WINDOWS-selection-selected {
+            background: var(--themeColor);
+            color: var(--themeSelectedColor);
+        }
+    }
+}
