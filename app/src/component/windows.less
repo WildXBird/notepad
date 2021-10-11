@@ -6,12 +6,16 @@
     top: 0;
     border: 1px #707070 solid;
     filter: drop-shadow(0px 0px 8px #8b8b8b);
+    text-align: left;
+    font-family: sans-serif;
 
     --themeColor: #0078D7;
     --themeContentColor: #000;
     --themeContentBackgroundColor: #F0F0F0;
     --themeTitleColor: #000;
     --themeTitleBackgroundColor: #FFFFFF;
+    --General_Border: #828790;
+    --General_Border-Actived: #0078D7;
 
     --titleHeight: 30px;
 
@@ -35,29 +39,74 @@
 }
 
 
-
-.WINDOWS-select {
+.WINDOWS-select-outBorder {
     --themeColor: #0077D5;
+    --themeBackgroundColor: #fff;
     --themeSelectedColor: #fff;
 
-    // height: 137px;
-    overflow-y: scroll;
-    overflow-x: hidden;
     border: 1px #828790 solid;
+    background-color: var(--themeBackgroundColor);
+    padding: 1px;
+    height: 100%;
+    width: 100%;
 
-    .WINDOWS-selection {
-        line-height: 19px;
-        height: 19px;
-        margin-left: 1px;
-        margin-right: 1px;
-        width: calc(100% - 2px);
-        overflow: hidden;
-        white-space: nowrap;
-        font-size: 14px;
+    .WINDOWS-select {
+        height: 100%;
+        width: 100%;
+        overflow-y: scroll;
+        overflow-x: hidden;
+        background-color: var(--themeBackgroundColor);
+        scroll-snap-type: y;
 
-        &.WINDOWS-selection-selected {
-            background: var(--themeColor);
-            color: var(--themeSelectedColor);
+        .WINDOWS-selection {
+            scroll-snap-align: start;
+
+            line-height: 20px;
+            height: 19px;
+            margin-right: 1px;
+            width: calc(100% - 1px);
+            overflow: hidden;
+            white-space: nowrap;
+            font-size: 14px;
+
+            &.WINDOWS-selection-selected {
+                background: var(--themeColor);
+                color: var(--themeSelectedColor);
+            }
         }
     }
+}
+
+.WINDOWS-input {
+
+    position: relative;
+    width: 100%;
+    background-color: white;
+    border: 1px var(--General_Border) solid;
+    height: 24px;
+    padding-left: 3px;
+    padding-right: 4px;
+
+    input {
+        position: absolute;
+        top: 2px;
+        padding: 0px;
+        height: 17px;
+        line-height: 17px;
+        border: 0px;
+        width: calc(100% - 7px);
+        font-size: 12px;
+        font-family: sans-serif;
+
+    }
+
+    &.WINDOWS-input-actived {
+        border: 1px var(--General_Border-Actived) solid;
+    }
+}
+
+.WINDOWS-paragraph{
+    font-size: 12px;
+    padding-top:3px;
+    padding-bottom:3px;
 }

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import './App.css';
+import './App.less';
 import { getFontList } from "./function/getFontList"
 import { md5 } from "./function/hash"
 import { diffChars } from "diff"
