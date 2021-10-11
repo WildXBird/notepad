@@ -6,6 +6,7 @@ import { diffChars } from "diff"
 import { type } from 'os';
 import { setInterval } from 'timers';
 import { createInvisibleDOM, removeDOM } from "./function/createInvisibleDOM"
+import {FontSelection} from "./component/fontSelection"
 
 const GUID = function () {
   function S4() {
@@ -17,6 +18,7 @@ const GUID = function () {
 type AppState = {
   posY: number
   posX: number
+  lastContentHTML: string
   lines: {
     elements: {
       text: string,
@@ -28,25 +30,28 @@ type AppState = {
 }
 class App extends React.PureComponent<any, AppState> {
   textInput: React.RefObject<HTMLDivElement> | undefined
+  textInputsim: React.RefObject<HTMLDivElement> | undefined
   fontTemp: React.RefObject<HTMLDivElement> | undefined
   constructor(props: {}) {
     super(props);
     this.textInput = React.createRef();
+    this.textInputsim = React.createRef();
     this.fontTemp = React.createRef();
     this.state = {
       posY: 1,
       posX: 1,
+      lastContentHTML: "",
       lines: []
     }
   }
 
 
   async componentDidMount() {
-    if (!this.fontTemp || !this.fontTemp.current) {
-      return
-    }
-    const fontInstalled = await getFontList()
-    console.log("fontInstalled", fontInstalled)
+    // if (!this.fontTemp || !this.fontTemp.current) {
+    //   return
+    // }
+    // const fontInstalled = await getFontList()
+    // console.log("fontInstalled", fontInstalled)
 
   }
 
@@ -60,12 +65,23 @@ class App extends React.PureComponent<any, AppState> {
           <div id="temp" />
           <div id="fontTemp" ref={this.fontTemp} />
         </div>
+        <FontSelection />
         <section
           ref={this.textInput}
           onClick={this.freshCursorPosition.bind(this)}
           onKeyDown={this.freshCursorPosition.bind(this)}
           onInput={this.afterInput.bind(this)}
           className="App-content"
+          contentEditable="true"
+          spellCheck="false"
+        />
+
+        <section
+          ref={this.textInputsim}
+          onClick={this.freshCursorPosition.bind(this)}
+          onKeyDown={this.freshCursorPosition.bind(this)}
+          onInput={this.afterInput.bind(this)}
+          className="App-sim"
           contentEditable="true"
           spellCheck="false"
         />
@@ -102,9 +118,7 @@ class App extends React.PureComponent<any, AppState> {
   }
   afterInput(event: React.FormEvent<HTMLElement>) {
     this.contentFilter()
-    // setTimeout(() => {
-    //   this.contentFilter()
-    // }, 0);
+    // setTimeout(this.contentFilter, 0);
     this.freshCursorPosition()
   }
   contentFilter() {
@@ -165,6 +179,25 @@ class App extends React.PureComponent<any, AppState> {
       html = html.replaceAll("\n", "<br>")
       return html
     }
+    function elementRemoveBR(thisElement: HTMLElement): void {
+      const walker = document.createTreeWalker(thisElement);
+      let node = walker.nextNode();
+      const removeList: Node[] = []
+
+      while (node !== null) {
+        if (Node.ELEMENT_NODE !== node.nodeType) {
+          const thisNode: HTMLElement = node as unknown as HTMLElement
+          if (thisNode.tagName === "BR") {
+            removeList.push(thisNode)
+          }
+        }
+        node = walker.nextNode();
+      }
+
+      for (let dom of removeList) {
+        dom.parentNode?.removeChild(dom)
+      }
+    }
     function isNodeNeed2BeUpdate(thisElement: HTMLElement): boolean {
       const thisMD5 = thisElement.getAttribute("inner_html_md5") || ""
       const newMD5 = md5(thisElement.innerHTML)
@@ -184,6 +217,7 @@ class App extends React.PureComponent<any, AppState> {
       }
       //检查子节点
       const childNodes = thisElement.childNodes
+      elementRemoveBR(thisElement)
       for (let node of childNodes) {
         if (Node.TEXT_NODE === node.nodeType) {
           //文字节点略过，看看其他的node
@@ -215,45 +249,105 @@ class App extends React.PureComponent<any, AppState> {
     if (!this.textInput || !this.textInput.current) {
       console.error('textInput not ready')
       return
-
     }
-    // const childNodes = getSelection()
+    if (!this.textInputsim || !this.textInputsim.current) {
+      console.error('textInputsim not ready')
+      return
+    }
+    const selection = getSelection()
     const textInputDom = this.textInput.current
+    const textInputsimDom = this.textInputsim.current
     const childNodes = textInputDom.childNodes
     const removeList: Node[] = []
     const addLinesList: {
       before: Node,
       text: string
     }[] = []
+
+    textInputsimDom.innerHTML = textInputDom.innerHTML
+
+
+
+    if (this.state.lastContentHTML.length === 0) {
+      textInputDom.innerHTML = `<div>${textInputDom.innerHTML}</div>`
+    }
+
+    this.setState({
+      lastContentHTML: textInputDom.innerHTML
+    })
+    const stage = document.createElement('div');
+
     for (let node of childNodes) {
-      if (Node.ELEMENT_NODE !== node.nodeType) {
+      if (Node.TEXT_NODE === node.nodeType) {
+        removeList.push(node)
+        addLinesList.push({
+          before: node,
+          text: node.textContent || ""
+        })
+      } else if (Node.ELEMENT_NODE !== node.nodeType) {
         removeList.push(node)
       } else {
         const thisElement: HTMLElement = node as unknown as HTMLElement
-        if (isNodeNeed2BeUpdate(thisElement)) {
-          removeList.push(node)
-          console.log("isNodeNeed2BeUpdate", true, thisElement)
-          const tempDom = createInvisibleDOM()
-          tempDom.innerHTML = childNodeTextsEscape(thisElement.innerHTML)
-          const newLines = []
-          console.log("tempDom.innerText",tempDom.innerText,tempDom.innerText.split("\n"))
-          newLines.push(...tempDom.innerText.split("\n"))
-          console.log("newLines", newLines)
-          for (let text of newLines) {
-            addLinesList.push({
-              before: thisElement,
-              text: childNodeTextsSymbolRecover(text)
-            })
-          }
-          removeDOM(tempDom)
-        } else {
-          // console.log("NOT", "isNodeNeed2BeUpdate", thisElement)
+        switch (thisElement.tagName) {
+          case "BR":
+            removeList.push(thisElement)
+            break;
+          case "SPAN":
+          case "B":
+
+            break;
+
+          default:
+            if (isNodeNeed2BeUpdate(thisElement)) {
+              removeList.push(node)
+              console.log("isNodeNeed2BeUpdate", true, thisElement)
+              const tempDom = createInvisibleDOM()
+              tempDom.innerHTML = childNodeTextsEscape(thisElement.innerHTML)
+              const newLines = []
+              console.log("tempDom.innerHTML", tempDom.innerHTML,)
+              console.log("tempDom.innerText", tempDom.innerText, tempDom.innerText.split("\n"))
+              newLines.push(...tempDom.innerText.split("\n"))
+              console.log("newLines", newLines)
+              for (let text of newLines) {
+                addLinesList.push({
+                  before: thisElement,
+                  text: childNodeTextsSymbolRecover(text)
+                })
+              }
+              removeDOM(tempDom)
+            }
+            break;
         }
+        // if (thisElement.tagName === "BR") {
+        //   removeList.push(thisElement)
+        // } else if (thisElement.tagName === "SPAN") {
+        //   removeList.push(thisElement)
+        // } else if (isNodeNeed2BeUpdate(thisElement)) {
+        //   removeList.push(node)
+        //   console.log("isNodeNeed2BeUpdate", true, thisElement)
+        //   const tempDom = createInvisibleDOM()
+        //   tempDom.innerHTML = childNodeTextsEscape(thisElement.innerHTML)
+        //   const newLines = []
+        //   console.log("tempDom.innerHTML", tempDom.innerHTML,)
+        //   console.log("tempDom.innerText", tempDom.innerText, tempDom.innerText.split("\n"))
+        //   newLines.push(...tempDom.innerText.split("\n"))
+        //   console.log("newLines", newLines)
+        //   for (let text of newLines) {
+        //     addLinesList.push({
+        //       before: thisElement,
+        //       text: childNodeTextsSymbolRecover(text)
+        //     })
+        //   }
+        //   removeDOM(tempDom)
+        // } else {
+        //   // console.log("NOT", "isNodeNeed2BeUpdate", thisElement)
+        // }
 
       }
     }
-    return
-    // //！先insert后remove
+    // return
+
+    //！先insert后remove
     for (let line of addLinesList) {
       var paragraph = document.createElement('div');
       paragraph.innerHTML = line.text
