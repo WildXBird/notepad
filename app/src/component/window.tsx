@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { getFontList } from "../function/getFontList"
-import "./window.sass"
+import "./window.less"
 
 type AppState = {
 
