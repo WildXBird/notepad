@@ -90,25 +90,23 @@ export class Window extends React.PureComponent<WindowProps, WindowState> {
       this.WINDOW.current.style.transform = `translate(${left}px, ${top}px)`
     }
   }
+
   mouseup() {
-    console.log("mouseup")
-
-    this.moving = false
-
-
+    if (this.moving) {
+      console.log("mouseup")
+      this.moving = false
+    }
   }
-
-
 }
 
 export type SelectionData<T> = {
-  id?: number
-  value: T
+  data?: T
+  key: string
   text: string
 }
 type SelectProps<T> = {
   data: SelectionData<T>[]
-  value?: T
+  activedKey?: number | string
   renderStyle?: (data: SelectionData<T>) => React.CSSProperties
   style?: React.CSSProperties
   onChange?: (data: SelectionData<T>) => void
@@ -123,21 +121,17 @@ export class Select<T> extends React.PureComponent<SelectProps<T>, SelectState<T
   constructor(props: SelectProps<T>) {
     super(props);
     this.node = React.createRef();
-
-    this.state = {
-
-    }
+    this.state = {}
   }
 
   componentDidMount() {
-    if (this.props.value) {
+    if (this.props.activedKey) {
       this.setState({ needFocusSelected: true, didMounted: true })
     }
-    this.focusIfNeed()
+    this.scrollIntoViewIfNeed()
   }
   componentDidUpdate() {
-    console.log('componentDidUpdate')
-    this.focusIfNeed()
+    this.scrollIntoViewIfNeed()
   }
   render() {
     let hasSelected: boolean = false
@@ -146,7 +140,7 @@ export class Select<T> extends React.PureComponent<SelectProps<T>, SelectState<T
       if (this.props.renderStyle) {
         renderStyle = this.props.renderStyle(item)
       }
-      const selected = this.props.value === item.value
+      const selected = this.props.activedKey === item.key
       if (selected) {
         hasSelected = true
       }
@@ -155,9 +149,9 @@ export class Select<T> extends React.PureComponent<SelectProps<T>, SelectState<T
         style={{ ...renderStyle }}
         onClick={() => {
           if (this.props.onChange) { this.props.onChange(item) }
+          setTimeout(() => this.scrollIntoViewIfNeed(true), 0);
         }}
-        key={(typeof (item.id) === "number" ? String(item.id) : undefined) ||
-          (typeof (item.value) === "string" ? String(item.value) : undefined)}
+        key={(item.key ? String(item.key) : undefined)}
       >
         {item.text}
       </div>
@@ -187,12 +181,15 @@ export class Select<T> extends React.PureComponent<SelectProps<T>, SelectState<T
       }
     }
   }
-  focusIfNeed() {
-    if (this.state.needFocusSelected) {
+  scrollIntoViewIfNeed(force = false) {
+    console.log("focusIfNeed", force)
+    if (this.state.needFocusSelected || force) {
       if (this.node.current) {
         const selected = this.node.current.getElementsByClassName("WINDOWS-selection-selected")
         for (let element of selected) {
-          element.scrollIntoView()
+          console.log("focusIfNeed", "act", element)
+
+          element.scrollIntoView({ block: "nearest" })
           this.setState({
             needFocusSelected: false
           })
@@ -271,5 +268,23 @@ export class Paragraph extends React.PureComponent<ParagraphProps, {}> {
   }
 
 }
+type FieldsetProps = {
+  title: string
+  style: React.CSSProperties
+}
+export class Fieldset extends React.PureComponent<FieldsetProps, {}> {
+  render() {
+    return (
+      <div className={"WINDOWS-fieldset"} style={{ ...this.props.style }}>
+        <fieldset>
+          <legend>{this.props.title}</legend>
+          <div className={"WINDOWS-fieldset-content"}>
+            {this.props.children}
+          </div>
+        </fieldset>
+      </div>
+    )
+  }
 
+}
 

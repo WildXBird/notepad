@@ -1,20 +1,27 @@
 import { createInvisibleDOM, removeDOM } from "./createInvisibleDOM"
+import { ZerWidth_WoffBase64 } from "./ZeroWidthFont"
 
 
-export async function getFontList() {
-    const element = createInvisibleDOM()
+const installZeroWidthFontIfNeed = function (): boolean {
     if (!document.getElementById("ZeroWidthFont-install")) {
         const dom = document.createElement("style");
         dom.innerHTML = `@font-face {
     font-family: 'ZeroWidth';      
-    src: url(${ZeroWidthFontFile}) format('woff');
+    src: url(${ZerWidth_WoffBase64}) format('woff');
 }
 .font-test-span{
     font-size: 64px;
     font-weight: 400;
 }`
         document.head.appendChild(dom);
+        return true
     }
+    return false
+}
+
+export async function getFontList() {
+    const element = createInvisibleDOM()
+    installZeroWidthFontIfNeed()
 
     element.innerHTML = ""
     let waitingCheckDomList: HTMLSpanElement[] = []
@@ -23,7 +30,7 @@ export async function getFontList() {
     for (let fontInfo of frontList) {
         const fontCSSName = fontInfo.en_name
         let newDiv = document.createElement("span");
-        newDiv.style.fontFamily = `"${fontCSSName}", "ZeroWidth", Arial`
+        newDiv.style.fontFamily = `"${fontCSSName}", "ZeroWidth"`
         newDiv.className = "font-test-span"
         newDiv.innerHTML = "A"
         newDiv.setAttribute("en_name", fontInfo.en_name)
@@ -52,7 +59,6 @@ export async function getFontList() {
 }
 
 
-const ZeroWidthFontFile = "data:font/woff;charset=utf-8;base64,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"
 
 const frontList = [
     {
@@ -1998,4 +2004,113 @@ export function isSupportFontWeight(fontFamily: string, fontWeight: fontWeight) 
     };
 
     return getFontData(defaultFontWeight, context).join('') !== getFontData(fontWeight, context).join('');
+};
+export type Script = {
+    name: string
+    testText: string
+    sampleText: string
+    key: string
+}
+const scriptList: Script[] = [
+    {
+        name: "chinese",
+        testText: "刨",
+        sampleText: "刨",
+        key: "chinese",
+    }, {
+        name: "西欧语言",
+        testText: "A",
+        sampleText: "A",
+        key: "西欧语言",
+    }, {
+        name: "希伯来语",
+        testText: "ת",
+        sampleText: "ת",
+        key: "希伯来语",
+    }, {
+        name: "阿拉伯语",
+        testText: "ل",
+        sampleText: "ل",
+        key: "阿拉伯语",
+    }, {
+        name: "希腊语",
+        testText: "β",
+        sampleText: "β",
+        key: "希腊语",
+    }, {
+        name: "土耳其语",
+        testText: "Ğ",
+        sampleText: "Ğ",
+        key: "土耳其语",
+    }, {
+        name: "波罗的语",//这个存在判断失误问题
+        testText: "ś",
+        sampleText: "ś",
+        key: "波罗的语",
+    }, {
+        name: "中欧字符",
+        testText: "Á",
+        sampleText: "Á",
+        key: "中欧字符",
+    }, {
+        name: "西里尔语",
+        testText: "ф",
+        sampleText: "ф",
+        key: "西里尔语",
+    }, {
+        name: "越南语",
+        testText: "ữ",
+        sampleText: "ữ",
+        key: "越南语",
+    }
+]
+export async function getFontSupportScript(fontFamily: string) {
+    const startTime = performance.now()
+
+    const element = createInvisibleDOM()
+    installZeroWidthFontIfNeed()
+
+    element.innerHTML = ""
+    let waitingCheckDomList: HTMLSpanElement[] = []
+    let outterDiv = document.createElement("div");
+
+
+
+    for (let script of scriptList) {
+        let newDiv = document.createElement("span");
+        newDiv.style.fontFamily = `"${fontFamily}", "ZeroWidth"`
+        newDiv.className = "font-test-span"
+        newDiv.innerHTML = script.testText
+
+        newDiv.setAttribute("script_name", script.name)
+        newDiv.setAttribute("script_key", script.key)
+        newDiv.setAttribute("script_sampleText", script.sampleText)
+        outterDiv.appendChild(newDiv);
+        waitingCheckDomList.push(newDiv)
+    }
+
+    element.appendChild(outterDiv);
+    const supportScript: Set<{
+        name: string
+        key: string
+        sampleText: string
+    }> = new Set()
+
+    await document.fonts.ready
+    for (let dom of waitingCheckDomList) {
+        if (dom.offsetWidth > 5) {
+            supportScript.add({
+                name: dom.getAttribute("script_name") || "null??",
+                key: dom.getAttribute("script_key") || "null??",
+                sampleText: dom.getAttribute("script_sampleText") || "null??",
+            })
+        }
+    }
+    removeDOM(element)
+
+
+    console.log("supportScript", fontFamily, supportScript)
+
+    console.log("takes", performance.now() - startTime)
+    return [...supportScript]
 };
