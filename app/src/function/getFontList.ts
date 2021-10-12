@@ -2013,54 +2013,54 @@ export type Script = {
 }
 const scriptList: Script[] = [
     {
-        name: "chinese",
+        name: "中文 GB2312",
         testText: "刨",
-        sampleText: "刨",
+        sampleText: "微软中文软件",
         key: "chinese",
     }, {
         name: "西欧语言",
         testText: "A",
-        sampleText: "A",
+        sampleText: "AaBbYyZz",
         key: "西欧语言",
     }, {
         name: "希伯来语",
         testText: "ת",
-        sampleText: "ת",
+        sampleText: "AaBbנסשת",
         key: "希伯来语",
     }, {
         name: "阿拉伯语",
         testText: "ل",
-        sampleText: "ل",
+        sampleText: "AaBbابجدهوز",
         key: "阿拉伯语",
     }, {
         name: "希腊语",
         testText: "β",
-        sampleText: "β",
+        sampleText: "AaBbΑαΒβ",
         key: "希腊语",
     }, {
         name: "土耳其语",
         testText: "Ğ",
-        sampleText: "Ğ",
+        sampleText: "AaBbĞğŞş",
         key: "土耳其语",
     }, {
         name: "波罗的语",//这个存在判断失误问题
         testText: "ś",
-        sampleText: "ś",
+        sampleText: "AaBbYyZz",
         key: "波罗的语",
     }, {
         name: "中欧字符",
         testText: "Á",
-        sampleText: "Á",
+        sampleText: "AaBbÁáÔô",
         key: "中欧字符",
     }, {
         name: "西里尔语",
         testText: "ф",
-        sampleText: "ф",
+        sampleText: "AaBbБбФф",
         key: "西里尔语",
     }, {
         name: "越南语",
         testText: "ữ",
-        sampleText: "ữ",
+        sampleText: "AaBbƯưƠơ",
         key: "越南语",
     }
 ]

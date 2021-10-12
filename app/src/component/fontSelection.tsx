@@ -225,7 +225,7 @@ export class FontSelection extends React.PureComponent<{}, AppState> {
                     <div style={{ width: 172, marginLeft: 12 }} />
                     <div style={{ width: 210, marginLeft: 17, verticalAlign: "top" }}>
                         <Fieldset title={"示例"} style={{ width: "100%", height: 90, marginBottom: 10 }}>
-                            <span style={{ ...this.calcFontStyle() }}>
+                            <span style={{ ...this.calcFontStyle(), }} dir="ltr">
                                 {this.state.currentFontSupportedScriptSelectedSampleText}
                             </span>
                         </Fieldset>
