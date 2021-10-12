@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { getFontList, isSupportFontWeight, fontWeight, getFontSupportScript } from "../function/getFontList"
-import { Window, Select, SelectionData, Input, Paragraph, Fieldset } from "./windows"
+import { Window, Select,DropdownSelect, SelectionData, Input, Paragraph, Fieldset } from "./windows"
 import "./fontSelection.less"
 
 type FontInstalled = {
@@ -231,11 +231,10 @@ export class FontSelection extends React.PureComponent<{}, AppState> {
                         </Fieldset>
 
                         <Paragraph>{"脚本("}<u>{"R"}</u>{"):"}</Paragraph>
-                        <Select
+                        <DropdownSelect
                             data={this.state.currentFontSupportedScriptForSelect}
                             activedKey={this.state.currentFontSupportedScriptSelectedKey}
                             style={{ height: 123 }}
-                            renderStyle={(item) => ({ fontSize: 12, paddingLeft: 1, lineHeight: "19px" })}
                             onChange={(item) => {
                                 this.setState({
                                     currentFontSupportedScriptSelectedKey: item.key,
@@ -295,7 +294,15 @@ export class FontSelection extends React.PureComponent<{}, AppState> {
         state.currentFontSupportedScriptForSelect = currentFontSupportedScriptForSelect
 
         if (SupportedScript.length > 0) {
-            if (!this.state.currentFontSupportedScriptSelectedKey) {
+            let needUpdateSelectedKey = true
+            if (state.currentFontSupportedScriptSelectedKey) {
+                for(let item of SupportedScript){
+                    if(state.currentFontSupportedScriptSelectedKey === item.key){
+                        needUpdateSelectedKey = false
+                    }
+                }
+            }
+            if (needUpdateSelectedKey) {
                 for (let item of SupportedScript) {
                     state.currentFontSupportedScriptSelectedKey = item.key
                     state.currentFontSupportedScriptSelectedSampleText = item.sampleText

@@ -111,12 +111,11 @@ type SelectProps<T> = {
   style?: React.CSSProperties
   onChange?: (data: SelectionData<T>) => void
 }
-type SelectState<T> = {
-  // selected?: T
+type SelectState = {
   needFocusSelected?: boolean
   didMounted?: boolean
 }
-export class Select<T> extends React.PureComponent<SelectProps<T>, SelectState<T>> {
+export class Select<T> extends React.PureComponent<SelectProps<T>, SelectState> {
   node: React.RefObject<HTMLDivElement>
   constructor(props: SelectProps<T>) {
     super(props);
@@ -182,13 +181,135 @@ export class Select<T> extends React.PureComponent<SelectProps<T>, SelectState<T
     }
   }
   scrollIntoViewIfNeed(force = false) {
-    console.log("focusIfNeed", force)
     if (this.state.needFocusSelected || force) {
       if (this.node.current) {
         const selected = this.node.current.getElementsByClassName("WINDOWS-selection-selected")
         for (let element of selected) {
-          console.log("focusIfNeed", "act", element)
+          element.scrollIntoView({ block: "nearest" })
+          this.setState({
+            needFocusSelected: false
+          })
+        }
+      } else {
+        console.error("无法滚动到被选中内容")
+      }
+    }
+  }
 
+}
+type DropdownSelectState = {
+  needFocusSelected?: boolean
+  didMounted?: boolean
+  showDropdown: boolean
+  hoveredSelectionkey?: string
+}
+export class DropdownSelect<T> extends React.PureComponent<SelectProps<T>, DropdownSelectState> {
+  node: React.RefObject<HTMLDivElement>
+  constructor(props: SelectProps<T>) {
+    super(props);
+    this.node = React.createRef();
+    this.state = {
+      showDropdown: true
+    }
+  }
+
+  componentDidMount() {
+    if (this.props.activedKey) {
+      this.setState({ needFocusSelected: true, didMounted: true })
+    }
+    this.scrollIntoViewIfNeed()
+  }
+  componentDidUpdate() {
+    this.scrollIntoViewIfNeed()
+  }
+  render() {
+    let hasSelected: boolean = false
+    let currentSelectedText = ""
+    let render = (item: SelectionData<T>) => {
+      let renderStyle = {}
+      if (this.props.renderStyle) {
+        renderStyle = this.props.renderStyle(item)
+      }
+      let selected = this.props.activedKey === item.key
+      if (selected) {
+        currentSelectedText = item.text
+      }
+      if (this.state.hoveredSelectionkey) {
+        selected = this.state.hoveredSelectionkey === item.key
+      }
+      if (selected) {
+        hasSelected = true
+      }
+      return <div
+        className={`${selected ? "WINDOWS-dropdownSelect-selection-selected" : ""} WINDOWS-dropdownSelect-selection`}
+        style={{ ...renderStyle }}
+        onClick={() => {
+          if (this.props.onChange) { this.props.onChange(item) }
+          setTimeout(() => this.scrollIntoViewIfNeed(true), 0);
+        }}
+        onMouseEnter={() => { this.setState({ hoveredSelectionkey: item.key }) }}
+        key={(item.key ? String(item.key) : undefined)}
+      >
+        {item.text}
+      </div>
+    }
+    const childrenCount = this.props.data.length
+    const children = Array.from(this.props.data, render)
+    if (!hasSelected && this.state.didMounted) {
+      this.selectedFirstItem()
+    }
+    const selectionsHeight = this.state.showDropdown ? (childrenCount * 17) : (0)
+    const selectionsBorderColor = this.state.showDropdown ? undefined : ("#0078d700")
+    const selectionsBackgroundColor = this.state.showDropdown ? undefined : ("#ffffff00")
+    const selectionsBackgroundTransitionDuration = this.state.showDropdown ? "0.1s" : undefined
+    const selectionsShadowHeight = this.state.showDropdown ? Math.max((childrenCount * 17 - 5),0) : (0)
+
+    return (
+      <div
+        ref={this.node}
+        className={`WINDOWS-dropdownSelect ${this.state.showDropdown ? "WINDOWS-dropdownSelect-showDropdown" : ""}`}
+        onClick={() => {
+          this.setState({ showDropdown: !this.state.showDropdown, hoveredSelectionkey: "" })
+        }}
+      // style={this.props.style}
+      >
+        <div className={"WINDOWS-dropdownSelect-currentSelected"} >
+          {currentSelectedText}{String(this.state.showDropdown)}
+        </div>
+        <div className={"WINDOWS-dropdownSelect-arrow"} />
+        <input className={"WINDOWS-dropdownSelect-fakeInput"} />
+        <div className={"WINDOWS-dropdownSelect-selections-limiter"}>
+          <div className={"WINDOWS-dropdownSelect-selections"}
+            style={{
+              maxHeight: selectionsHeight, borderColor: selectionsBorderColor,
+              backgroundColor: selectionsBackgroundColor,
+              transitionDuration: selectionsBackgroundTransitionDuration
+            }}>
+            <div className={"WINDOWS-dropdownSelect-selections-shadow"}
+              style={{ height: selectionsShadowHeight }} />
+            {children}
+
+          </div>
+        </div>
+        {/* {children} */}
+      </div>
+
+    )
+  }
+
+  selectedFirstItem() {
+    if (this.props.data.length > 0) {
+      for (let item of this.props.data) {
+        if (this.props.onChange) { this.props.onChange(item) }
+        break
+      }
+    }
+  }
+  scrollIntoViewIfNeed(force = false) {
+    if (this.state.needFocusSelected || force) {
+      if (this.node.current) {
+        const selected = this.node.current.getElementsByClassName("WINDOWS-selection-selected")
+        for (let element of selected) {
           element.scrollIntoView({ block: "nearest" })
           this.setState({
             needFocusSelected: false

@@ -2013,9 +2013,12 @@ export type Script = {
 }
 const scriptList: Script[] = [
     {
-        name: "中文 GB2312",
+        name: "汉字",
+        // name: "中文 GB2312",
         testText: "刨",
-        sampleText: "微软中文软件",
+        sampleText: "走向世界",
+        // sampleText: "微软中文软件",
+
         key: "chinese",
     }, {
         name: "西欧语言",
@@ -2043,7 +2046,7 @@ const scriptList: Script[] = [
         sampleText: "AaBbĞğŞş",
         key: "土耳其语",
     }, {
-        name: "波罗的语",//这个存在判断失误问题
+        name: "波罗的语",
         testText: "ś",
         sampleText: "AaBbYyZz",
         key: "波罗的语",
@@ -2065,7 +2068,6 @@ const scriptList: Script[] = [
     }
 ]
 export async function getFontSupportScript(fontFamily: string) {
-    const startTime = performance.now()
 
     const element = createInvisibleDOM()
     installZeroWidthFontIfNeed()
@@ -2073,8 +2075,6 @@ export async function getFontSupportScript(fontFamily: string) {
     element.innerHTML = ""
     let waitingCheckDomList: HTMLSpanElement[] = []
     let outterDiv = document.createElement("div");
-
-
 
     for (let script of scriptList) {
         let newDiv = document.createElement("span");
@@ -2107,10 +2107,5 @@ export async function getFontSupportScript(fontFamily: string) {
         }
     }
     removeDOM(element)
-
-
-    console.log("supportScript", fontFamily, supportScript)
-
-    console.log("takes", performance.now() - startTime)
     return [...supportScript]
 };
