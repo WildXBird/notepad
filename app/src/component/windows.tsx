@@ -209,7 +209,7 @@ export class DropdownSelect<T> extends React.PureComponent<SelectProps<T>, Dropd
     super(props);
     this.node = React.createRef();
     this.state = {
-      showDropdown: true
+      showDropdown: false
     }
   }
 
@@ -260,9 +260,10 @@ export class DropdownSelect<T> extends React.PureComponent<SelectProps<T>, Dropd
     }
     const selectionsHeight = this.state.showDropdown ? (childrenCount * 17) : (0)
     const selectionsBorderColor = this.state.showDropdown ? undefined : ("#0078d700")
+    const selectionsBorderWidth = this.state.showDropdown ? undefined : (0)
     const selectionsBackgroundColor = this.state.showDropdown ? undefined : ("#ffffff00")
     const selectionsBackgroundTransitionDuration = this.state.showDropdown ? "0.1s" : undefined
-    const selectionsShadowHeight = this.state.showDropdown ? Math.max((childrenCount * 17 - 5),0) : (0)
+    const selectionsShadowHeight = this.state.showDropdown ? Math.max((childrenCount * 17 - 5), 0) : (0)
 
     return (
       <div
@@ -271,27 +272,28 @@ export class DropdownSelect<T> extends React.PureComponent<SelectProps<T>, Dropd
         onClick={() => {
           this.setState({ showDropdown: !this.state.showDropdown, hoveredSelectionkey: "" })
         }}
-      // style={this.props.style}
       >
-        <div className={"WINDOWS-dropdownSelect-currentSelected"} >
-          {currentSelectedText}{String(this.state.showDropdown)}
+        <div className={"WINDOWS-dropdownSelect-box"}>
+          <div className={"WINDOWS-dropdownSelect-currentSelected"} >
+            {currentSelectedText}
+            {/* {String(this.state.showDropdown)} */}
+          </div>
+          <div className={"WINDOWS-dropdownSelect-arrow"} />
+          <input className={"WINDOWS-dropdownSelect-fakeInput"} />
         </div>
-        <div className={"WINDOWS-dropdownSelect-arrow"} />
-        <input className={"WINDOWS-dropdownSelect-fakeInput"} />
         <div className={"WINDOWS-dropdownSelect-selections-limiter"}>
           <div className={"WINDOWS-dropdownSelect-selections"}
             style={{
-              maxHeight: selectionsHeight, borderColor: selectionsBorderColor,
+              maxHeight: selectionsHeight, borderColor: selectionsBorderColor, 
+              borderWidth: selectionsBorderWidth,
               backgroundColor: selectionsBackgroundColor,
               transitionDuration: selectionsBackgroundTransitionDuration
             }}>
             <div className={"WINDOWS-dropdownSelect-selections-shadow"}
               style={{ height: selectionsShadowHeight }} />
             {children}
-
           </div>
         </div>
-        {/* {children} */}
       </div>
 
     )
