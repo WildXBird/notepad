@@ -6,14 +6,9 @@ import { diffChars } from "diff"
 import { type } from 'os';
 import { setInterval } from 'timers';
 import { createInvisibleDOM, removeDOM } from "./function/createInvisibleDOM"
-import {FontSelection} from "./component/fontSelection"
+import { FontSelection } from "./component/fontSelection"
+import { GUID } from "./function/guid"
 
-const GUID = function () {
-  function S4() {
-    return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
-  }
-  return (S4() + S4() + "-" + S4() + "-" + S4() + "-" + S4() + "-" + S4() + S4() + S4());
-}
 
 type AppState = {
   posY: number

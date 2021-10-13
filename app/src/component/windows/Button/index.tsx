@@ -37,7 +37,7 @@ export class Button extends React.PureComponent<ButtonProps, {}> {
 
 
 type ButtonGroupProps = {
-    children: Array<React.ReactElement>
+    children: Array<React.ReactElement<ButtonProps>>
     defaultActivedKey?: string,
 
 }
@@ -67,8 +67,6 @@ class ButtonGroup extends React.PureComponent<ButtonGroupProps, ButtonGroupState
 
     }
     render() {
-        let classNames = ["WINDOWS-buttonGroup"]
-        // if (this.props.type === "primary") { classNames.push("WINDOWS-button-primary") }
         const children: React.ReactElement[] = []
 
         this.props.children.map((component, cid) => {
@@ -91,25 +89,8 @@ class ButtonGroup extends React.PureComponent<ButtonGroupProps, ButtonGroupState
         })
 
 
-
-        // for (let component of this.props.children) {
-        //     if (component.type === Button) {
-        //         children.push(React.cloneElement<ButtonProps>(
-        //             component,
-        //             {
-        //                 onMouseDown: () => { this.setState({ lastMouseDownChildId:}) },
-        //                 onMouseUp: () => { alert("ee4") }
-        //             },
-        //             // [...children]
-        //         ))
-        //     } else {
-        //         console.warn("ButtonGroup 的子组件只能是 Button")
-        //     }
-        // }
-
         return (
             <div>
-                2323
                 {children}
             </div>
 
@@ -117,6 +98,14 @@ class ButtonGroup extends React.PureComponent<ButtonGroupProps, ButtonGroupState
     }
 }
 
+// const aa = <div>
+//     <ButtonGroup>
+//         <div style={{ height: 1 }}></div>
+//         <Button type="primary">
+//             {"确定"}
+//         </Button>
+//     </ButtonGroup>
+// </div>
 Button.Group = ButtonGroup
 
 
