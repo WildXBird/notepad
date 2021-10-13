@@ -283,7 +283,8 @@ export class DropdownSelect<T> extends React.PureComponent<SelectProps<T>, Dropd
         <div className={"WINDOWS-dropdownSelect-box"}
           onClick={() => { this.setState({ showDropdown: !this.state.showDropdown, hoveredSelectionkey: "" }) }}
         >
-          <div className={"WINDOWS-dropdownSelect-currentSelected"} >
+          {/* //需要修复 */}
+          <div className={`WINDOWS-dropdownSelect-currentSelected ${this.state.showDropdown?"WINDOWS-dropdownSelect-currentSelected-noActive":""}`} >
             {currentSelectedText}
             {/* {String(this.state.showDropdown)} */}
           </div>

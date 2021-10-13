@@ -99,9 +99,9 @@
     }
 
     &:focus-within {
-        .WINDOWS-dropdownSelect-currentSelected {
+        .WINDOWS-dropdownSelect-currentSelected:not(.WINDOWS-dropdownSelect-currentSelected-noActive) {
             background-color: var(--themeColor);
-            color: var(--themeBackgroundColor);
+            color: var(--themeBackgroundColor);          
         }
     }
 
@@ -130,7 +130,6 @@
             font-size: 12px;
             font-family: sans-serif;
             transition: background-color 0s, color 0s;
-
         }
 
         .WINDOWS-dropdownSelect-arrow {
