@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { getFontList } from "../function/getFontList"
 import "./windows.less"
+export * from "./Button"
 
 type WindowState = {
 
@@ -31,8 +31,6 @@ export class Window extends React.PureComponent<WindowProps, WindowState> {
 
 
   async componentDidMount() {
-    const fontInstalled = await getFontList()
-    console.log("fontInstalled", fontInstalled)
     if (this.WINDOW_title?.current) {
       this.WINDOW_title.current.addEventListener('mousedown', this.titleBarMousedown.bind(this));
       document.addEventListener('mouseup', this.mouseup.bind(this));
@@ -209,7 +207,7 @@ export class DropdownSelect<T> extends React.PureComponent<SelectProps<T>, Dropd
     super(props);
     this.node = React.createRef();
     this.state = {
-      showDropdown: false
+      showDropdown: true
     }
   }
 
@@ -218,14 +216,21 @@ export class DropdownSelect<T> extends React.PureComponent<SelectProps<T>, Dropd
       this.setState({ needFocusSelected: true, didMounted: true })
     }
     this.scrollIntoViewIfNeed()
+    document.addEventListener('mousedown', this.mousedown.bind(this));
   }
+  componentWillUnmount() {
+    document.removeEventListener('mousedown', this.mousedown);
+
+  }
+
   componentDidUpdate() {
     this.scrollIntoViewIfNeed()
   }
+
   render() {
     let hasSelected: boolean = false
     let currentSelectedText = ""
-    let render = (item: SelectionData<T>) => {
+    let renderFunc = (item: SelectionData<T>) => {
       let renderStyle = {}
       if (this.props.renderStyle) {
         renderStyle = this.props.renderStyle(item)
@@ -246,6 +251,7 @@ export class DropdownSelect<T> extends React.PureComponent<SelectProps<T>, Dropd
         onClick={() => {
           if (this.props.onChange) { this.props.onChange(item) }
           setTimeout(() => this.scrollIntoViewIfNeed(true), 0);
+          this.hideDropdown()
         }}
         onMouseEnter={() => { this.setState({ hoveredSelectionkey: item.key }) }}
         key={(item.key ? String(item.key) : undefined)}
@@ -254,7 +260,7 @@ export class DropdownSelect<T> extends React.PureComponent<SelectProps<T>, Dropd
       </div>
     }
     const childrenCount = this.props.data.length
-    const children = Array.from(this.props.data, render)
+    const children = Array.from(this.props.data, renderFunc)
     if (!hasSelected && this.state.didMounted) {
       this.selectedFirstItem()
     }
@@ -264,16 +270,19 @@ export class DropdownSelect<T> extends React.PureComponent<SelectProps<T>, Dropd
     const selectionsBackgroundColor = this.state.showDropdown ? undefined : ("#ffffff00")
     const selectionsBackgroundTransitionDuration = this.state.showDropdown ? "0.1s" : undefined
     const selectionsShadowHeight = this.state.showDropdown ? Math.max((childrenCount * 17 - 5), 0) : (0)
+    const selectionsShadowTransitionDuration = selectionsBackgroundTransitionDuration
 
     return (
       <div
         ref={this.node}
         className={`WINDOWS-dropdownSelect ${this.state.showDropdown ? "WINDOWS-dropdownSelect-showDropdown" : ""}`}
-        onClick={() => {
-          this.setState({ showDropdown: !this.state.showDropdown, hoveredSelectionkey: "" })
-        }}
+      //  onClick={() => {
+      //   this.setState({ showDropdown: !this.state.showDropdown, hoveredSelectionkey: "" })
+      // }}
       >
-        <div className={"WINDOWS-dropdownSelect-box"}>
+        <div className={"WINDOWS-dropdownSelect-box"}
+          onClick={() => { this.setState({ showDropdown: !this.state.showDropdown, hoveredSelectionkey: "" }) }}
+        >
           <div className={"WINDOWS-dropdownSelect-currentSelected"} >
             {currentSelectedText}
             {/* {String(this.state.showDropdown)} */}
@@ -284,13 +293,13 @@ export class DropdownSelect<T> extends React.PureComponent<SelectProps<T>, Dropd
         <div className={"WINDOWS-dropdownSelect-selections-limiter"}>
           <div className={"WINDOWS-dropdownSelect-selections"}
             style={{
-              maxHeight: selectionsHeight, borderColor: selectionsBorderColor, 
+              maxHeight: selectionsHeight, borderColor: selectionsBorderColor,
               borderWidth: selectionsBorderWidth,
               backgroundColor: selectionsBackgroundColor,
               transitionDuration: selectionsBackgroundTransitionDuration
             }}>
             <div className={"WINDOWS-dropdownSelect-selections-shadow"}
-              style={{ height: selectionsShadowHeight }} />
+              style={{ height: selectionsShadowHeight, transitionDuration: selectionsShadowTransitionDuration }} />
             {children}
           </div>
         </div>
@@ -322,7 +331,20 @@ export class DropdownSelect<T> extends React.PureComponent<SelectProps<T>, Dropd
       }
     }
   }
+  hideDropdown() {
+    this.setState({ showDropdown: false, hoveredSelectionkey: "" })
+  }
+  mousedown(event: MouseEvent) {
+    if (this.node && this.node.current && event.target) {
 
+      const selfNode = this.node.current
+      const clickTarget = event.target as HTMLDivElement
+      const compare = selfNode.compareDocumentPosition(clickTarget)
+      if (compare < 16) {
+        this.hideDropdown()
+      }
+    }
+  }
 }
 type InputProps = {
   actived?: boolean

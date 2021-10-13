@@ -1,6 +1,10 @@
 import * as React from 'react';
 import { getFontList, isSupportFontWeight, fontWeight, getFontSupportScript } from "../function/getFontList"
-import { Window, Select,DropdownSelect, SelectionData, Input, Paragraph, Fieldset } from "./windows"
+import {
+    Window, Select,
+    DropdownSelect, SelectionData,
+    Input, Paragraph, Fieldset, Button
+} from "./windows"
 import "./fontSelection.less"
 
 type FontInstalled = {
@@ -244,6 +248,31 @@ export class FontSelection extends React.PureComponent<{}, AppState> {
                             }}
                         />
                     </div>
+                    {/* //新一行 */}
+                    <div style={{ width: 210, marginLeft: 17, verticalAlign: "top" }}>
+                        <Button.Group>
+                            <Button type="primary">
+                                {"确定"}
+                            </Button>
+                            <Button>
+                                {"取消"}
+                            </Button>
+                        </Button.Group>
+
+                        <Button.Group>
+                           <div style={{height:1}}></div>
+                            <Button type="primary">
+                                {"确定"}
+                            </Button>
+                        </Button.Group>
+                        {/* <Button.Group>
+                            <Button type="primary">
+                                {"确定"}
+                            </Button>
+                        </Button.Group> */}
+
+
+                    </div>
 
 
                 </div>
@@ -296,8 +325,8 @@ export class FontSelection extends React.PureComponent<{}, AppState> {
         if (SupportedScript.length > 0) {
             let needUpdateSelectedKey = true
             if (state.currentFontSupportedScriptSelectedKey) {
-                for(let item of SupportedScript){
-                    if(state.currentFontSupportedScriptSelectedKey === item.key){
+                for (let item of SupportedScript) {
+                    if (state.currentFontSupportedScriptSelectedKey === item.key) {
                         needUpdateSelectedKey = false
                     }
                 }
