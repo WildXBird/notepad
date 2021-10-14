@@ -61,7 +61,7 @@ class ButtonGroup extends React.PureComponent<ButtonGroupProps, ButtonGroupState
         document.addEventListener("mouseup", this.mouseUp.bind(this));
     }
     componentWillUnmount() {
-        document.removeEventListener('mouseup', this.mouseUp);
+        document.removeEventListener('mouseup', this.mouseUp.bind(this));
 
     }
     mouseUp(event: MouseEvent) {
