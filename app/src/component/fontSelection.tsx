@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { getFontList, isSupportFontWeight, fontWeight, getFontSupportScript } from "../function/getFontList"
 import {
-    Window, Select,
+    Modal, Select,
     DropdownSelect, SelectionData,
     Input, Paragraph, Fieldset, Button
 } from "./windows"
@@ -166,14 +166,17 @@ export class FontSelection extends React.PureComponent<{}, AppState> {
 
     render() {
         return (
-            <Window
+            <Modal
+                title={"字体"}
                 width={427}
-                height={529}
+                height={451}
             >
                 <div className={"fontSelection"}>
                     <div style={{ width: 172, marginLeft: 12 }}>
                         <Paragraph>{"字体("}<u>{"F"}</u>{"):"}</Paragraph>
-                        <Input actived clickToSelectAll value={this.state.currentInputedFontText} />
+                        <Input primary
+                            // clickToSelectAll 
+                            value={this.state.currentInputedFontText} />
                         <Select<string>
                             data={this.state.fontInstalled4Select || []}
                             activedKey={this.state.currentSelectedFont}
@@ -187,14 +190,13 @@ export class FontSelection extends React.PureComponent<{}, AppState> {
                                     currentInputedFontText: item.text,
                                     ...supportedScriptNewState
                                 })
-                                // await this.updateSupportedScript()
-
                             }}
                         />
                     </div>
                     <div style={{ width: 130, marginLeft: 16 }}>
                         <Paragraph>{"字形("}<u>{"Y"}</u>{"):"}</Paragraph>
-                        <Input actived clickToSelectAll value={this.state.currentInputedFontStyleText} />
+                        <Input primary
+                            value={this.state.currentInputedFontStyleText} />
                         <Select
                             data={this.state.currnetSupportedFontStyleList}
                             activedKey={this.state.currentSelectedFontStyleKey}
@@ -211,7 +213,8 @@ export class FontSelection extends React.PureComponent<{}, AppState> {
                     </div>
                     <div style={{ width: 62, marginLeft: 17, verticalAlign: "top" }}>
                         <Paragraph>{"大小("}<u>{"S"}</u>{"):"}</Paragraph>
-                        <Input actived clickToSelectAll value={this.state.currentInputedFontSizeText} />
+                        <Input primary
+                            value={this.state.currentInputedFontSizeText} />
                         <Select
                             data={this.fontSizeList}
                             activedKey={this.state.currentSelectedFontSize}
@@ -249,35 +252,22 @@ export class FontSelection extends React.PureComponent<{}, AppState> {
                         />
                     </div>
                     {/* //新一行 */}
-                    <div style={{ width: 210, marginLeft: 17, verticalAlign: "top" }}>
-                        <Button.Group>
-                            <Button type="primary">
-                                {"确定"}
-                            </Button>
-                            <Button>
-                                {"取消"}
-                            </Button>
-                        </Button.Group>
-
-                        <Button.Group>
-                           <div style={{height:1}}></div>
-                            <Button type="primary">
-                                {"确定"}
-                            </Button>
-                        </Button.Group>
-                        {/* <Button.Group>
-                            <Button type="primary">
-                                {"确定"}
-                            </Button>
-                        </Button.Group> */}
-
+                    <div style={{
+                        width: 210, marginLeft: 10, verticalAlign: "top",
+                        bottom: 9, position: "absolute", left: 0,
+                    }}>
+                        <Paragraph>
+                            <a href="#">
+                                {"显示更多字体"}
+                            </a>
+                        </Paragraph>
 
                     </div>
 
 
                 </div>
 
-            </Window>
+            </Modal>
         )
     }
     calcFontStyle() {

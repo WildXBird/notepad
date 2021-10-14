@@ -4,6 +4,7 @@ import "./index.less"
 
 type ButtonProps = {
     key?: string
+    style?: React.CSSProperties
     type?: "primary"
     onMouseUp?: (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => void
     onMouseDown?: (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => void
@@ -39,6 +40,8 @@ export class Button extends React.PureComponent<ButtonProps, {}> {
 type ButtonGroupProps = {
     children: Array<React.ReactElement<ButtonProps>>
     defaultActivedKey?: string,
+    style?: React.CSSProperties
+
 
 }
 type ButtonGroupState = {
@@ -72,16 +75,17 @@ class ButtonGroup extends React.PureComponent<ButtonGroupProps, ButtonGroupState
         this.props.children.map((component, cid) => {
             if (component.type === Button) {
                 const thisKey = (typeof component.key === "string" || typeof (component.key) === "number") ? String(component.key) : `ButtonGroup-${cid}`
+                console.log("component", component)
                 children.push(React.cloneElement<ButtonProps>(
                     component,
                     {
+                        // style: { ...component.props.style, ...extraStyle },
                         key: thisKey,
                         type: (() => (this.state.internalActivedChildKey) ?
                             (thisKey === this.state.internalActivedChildKey ? "primary" : undefined) :
                             ((cid === 0) ? "primary" : undefined))(),
                         onMouseDown: () => { this.setState({ lastMouseDownChildKey: thisKey }) },
                     },
-                    // [...children]
                 ))
             } else {
                 console.warn("ButtonGroup 的子组件只能是 Button")
@@ -90,7 +94,7 @@ class ButtonGroup extends React.PureComponent<ButtonGroupProps, ButtonGroupState
 
 
         return (
-            <div>
+            <div className={"WINDOWS-buttonGroup"} style={this.props.style}>
                 {children}
             </div>
 
@@ -98,14 +102,7 @@ class ButtonGroup extends React.PureComponent<ButtonGroupProps, ButtonGroupState
     }
 }
 
-// const aa = <div>
-//     <ButtonGroup>
-//         <div style={{ height: 1 }}></div>
-//         <Button type="primary">
-//             {"确定"}
-//         </Button>
-//     </ButtonGroup>
-// </div>
+
 Button.Group = ButtonGroup
 
 

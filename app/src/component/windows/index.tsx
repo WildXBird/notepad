@@ -1,12 +1,13 @@
 import * as React from 'react';
-import { GUID } from "../../function/guid"
+import { GUID } from "../../function/guid";
+import "./windows.less";
 
-import "./windows.less"
-export * from "./Button"
+import { Button } from "./Button";
+export * from "./Button";
 
 export let WindowContext = React.createContext<WindowContextProps>({
   focus: '_unset',
-  setFocus: (next: string) => { },
+  setFocus: () => { },
 });
 WindowContext.displayName = 'MyDisplayName'
 export type WindowContextProps = {
@@ -14,12 +15,14 @@ export type WindowContextProps = {
   setFocus: (next: string) => void,
 }
 
-type WindowState = {
-  windowFocus: string
-}
 type WindowProps = {
   width?: number
   height?: number
+  title: string
+}
+type WindowState = {
+  display: boolean
+  windowFocus: string
 }
 export class Window extends React.PureComponent<WindowProps, WindowState> {
   WINDOW: React.RefObject<HTMLDivElement>
@@ -27,6 +30,11 @@ export class Window extends React.PureComponent<WindowProps, WindowState> {
   moving: boolean
   mouseMovingTitleBarOffsetX: number
   mouseMovingTitleBarOffsetY: number
+
+  titleHeight: number
+  left: number
+  top: number
+
   constructor(props: WindowProps) {
     super(props);
     this.WINDOW = React.createRef();
@@ -35,29 +43,58 @@ export class Window extends React.PureComponent<WindowProps, WindowState> {
     this.mouseMovingTitleBarOffsetX = 0
     this.mouseMovingTitleBarOffsetY = 0
 
+    this.titleHeight = 30
+    this.left = 60
+    this.top = 60
+
     this.state = {
+      display: false,
       windowFocus: "_unset"
     }
   }
 
+
   async componentDidMount() {
-    if (this.WINDOW_title?.current) {
+    if (this.WINDOW_title?.current && this.WINDOW?.current) {
       this.WINDOW_title.current.addEventListener('mousedown', this.titleBarMousedown.bind(this));
+      this.WINDOW.current.addEventListener('mousedown', this.windowMouseDown.bind(this));
       document.addEventListener('mouseup', this.mouseup.bind(this));
       document.addEventListener('mousemove', this.mousemove.bind(this));
     } else {
       console.error("WINDOW", "not readt")
     }
+    setTimeout(() => {
+      this.setState({
+        display: true,
+      })
+    }, 1000);
   }
   componentWillUnmount() {
     if (this.WINDOW_title?.current) {
       this.WINDOW_title.current.removeEventListener('mousedown', this.titleBarMousedown);
+    }
+    if (this.WINDOW?.current) {
+      this.WINDOW.current.addEventListener('mousedown', this.windowMouseDown.bind(this));
+
     }
     document.removeEventListener('mouseup', this.mouseup);
     document.removeEventListener('mousemove', this.mousemove);
 
   }
   render() {
+    let windowHeight = 400
+    if (this.props.height) {
+      windowHeight = this.props.height + this.titleHeight
+    }
+    const classNames = ["WINDOWS-window"]
+    let scale = 0.9
+    // let transition = "transform 0.3s, opacity 0.3s"
+    if (this.state.display) {
+      classNames.push("WINDOWS-window-display")
+      scale = 1
+      // transition = "transform 0s, opacity 0s"
+    }
+
     return (
       <WindowContext.Provider value={{
         focus: this.state.windowFocus,
@@ -65,13 +102,15 @@ export class Window extends React.PureComponent<WindowProps, WindowState> {
       }}>
         <div
           ref={this.WINDOW}
-          className={"WINDOWS-window"}
+          className={classNames.join(" ")}
           style={{
-            height: this.props.height || 400,
+            height: windowHeight,
             width: this.props.width || 300,
+            transform: `translate(${this.left}px, ${this.top}px) scale(${scale})`,
+            // transition,
           }}>
           <div ref={this.WINDOW_title} className={"WINDOWS-title"}>
-            {"字体"}
+            {this.props.title}
           </div>
           <div className={"WINDOWS-content"}>
             {this.props.children}
@@ -91,6 +130,24 @@ export class Window extends React.PureComponent<WindowProps, WindowState> {
     this.mouseMovingTitleBarOffsetX = left
     this.mouseMovingTitleBarOffsetY = top
   }
+  windowMouseDown(event: MouseEvent) {
+    console.log("windowMouseDown")
+    if (!event.target) {
+      return
+    }
+
+    const target: HTMLElement = event.target as HTMLElement
+    switch (target.tagName) {
+      case "INPUT":
+      case "A":
+        return
+
+      default:
+        break;
+    }
+
+    event.preventDefault()
+  }
   mousemove(event: MouseEvent) {
     if (!this.moving) {
       return
@@ -99,7 +156,12 @@ export class Window extends React.PureComponent<WindowProps, WindowState> {
     const left = event.clientX - this.mouseMovingTitleBarOffsetX
     const top = event.clientY - this.mouseMovingTitleBarOffsetY
     if (this.WINDOW?.current) {
-      this.WINDOW.current.style.transform = `translate(${left}px, ${top}px)`
+      this.left = left
+      this.top = top
+      let scale = this.state.display ? 1 : 0.9
+
+      this.WINDOW.current.style.transition = "transform 0s, opacity 0s"
+      this.WINDOW.current.style.transform = `translate(${left}px, ${top}px) scale(${scale})`
     }
   }
 
@@ -110,32 +172,91 @@ export class Window extends React.PureComponent<WindowProps, WindowState> {
     }
   }
 }
+
+type ModalProps = {
+  width?: number
+  height?: number
+  title?: string
+}
+type ModalState = {
+  windowFocus: string
+}
+export class Modal extends React.PureComponent<ModalProps, ModalState> {
+  footerHeight: number
+  constructor(props: ModalProps) {
+    super(props);
+    this.footerHeight = 48
+  }
+
+  async componentDidMount() {
+
+  }
+  componentWillUnmount() {
+
+  }
+  render() {
+
+    return (
+      <Window
+        title={this.props.title || "无标题"}
+        width={this.props.width}
+        height={((this.props.height || 0) + this.footerHeight)}>
+        <div style={{
+          height: this.props.height, width: "100%",
+          zIndex: 1, position: "relative"
+        }}>
+          {this.props.children}
+        </div>
+        <div style={{ height: this.footerHeight }}>
+          <Button.Group style={{
+            position: "absolute",
+            right: 9,
+            bottom: 6,
+          }}>
+            <Button type="primary">
+              {"确定"}
+            </Button>
+            <Button>
+              {"取消"}
+            </Button>
+          </Button.Group>
+        </div>
+      </Window >
+    )
+  }
+}
+
+
 class WindowComponent<P, S> extends React.PureComponent<P, S> {
   protected COMPONENT_ID: string
   static contextType = WindowContext;
-  private WINDOW_STATE: WindowContextProps;
 
   protected COMPONENT: {
-    getFocused: () => boolean | undefined
+    isFocused: () => boolean | undefined
+    focus: () => void | undefined
   };
 
   constructor(props: P) {
     super(props);
     this.COMPONENT_ID = GUID()
-    this.WINDOW_STATE = this.context
     const tryContent = () => {
       return typeof (this.context) === "object"
     }
     this.COMPONENT = {
-      getFocused: () => {
-        console.log("COMPONENT_STATE",tryContent(),this.WINDOW_STATE,this.context)
+      isFocused: () => {
         if (tryContent()) {
-          const WINDOW_STATE =  this.context
+          const WINDOW_STATE: WindowContextProps = this.context
           return WINDOW_STATE.focus === this.COMPONENT_ID
+        }
+      },
+      focus: () => {
+        if (tryContent()) {
+          const WINDOW_STATE: WindowContextProps = this.context
+          return WINDOW_STATE.setFocus(this.COMPONENT_ID)
         }
       }
     }
-    console.log("WINDOW_STATE", this.WINDOW_STATE, this.context, this)
+
   }
 }
 
@@ -249,7 +370,7 @@ export class DropdownSelect<T> extends React.PureComponent<SelectProps<T>, Dropd
     super(props);
     this.node = React.createRef();
     this.state = {
-      showDropdown: true
+      showDropdown: false
     }
   }
 
@@ -317,18 +438,12 @@ export class DropdownSelect<T> extends React.PureComponent<SelectProps<T>, Dropd
     return (
       <div
         ref={this.node}
-        className={`WINDOWS-dropdownSelect ${this.state.showDropdown ? "WINDOWS-dropdownSelect-showDropdown" : ""}`}
-      //  onClick={() => {
-      //   this.setState({ showDropdown: !this.state.showDropdown, hoveredSelectionkey: "" })
-      // }}
-      >
+        className={`WINDOWS-dropdownSelect ${this.state.showDropdown ? "WINDOWS-dropdownSelect-showDropdown" : ""}`}>
         <div className={"WINDOWS-dropdownSelect-box"}
           onClick={() => { this.setState({ showDropdown: !this.state.showDropdown, hoveredSelectionkey: "" }) }}
         >
-          {/* //需要修复 */}
           <div className={`WINDOWS-dropdownSelect-currentSelected ${this.state.showDropdown ? "WINDOWS-dropdownSelect-currentSelected-active" : ""}`} >
             {currentSelectedText}
-            {/* {String(this.state.showDropdown)} */}
           </div>
           <div className={"WINDOWS-dropdownSelect-arrow"} />
           <input className={"WINDOWS-dropdownSelect-fakeInput"} />
@@ -390,11 +505,9 @@ export class DropdownSelect<T> extends React.PureComponent<SelectProps<T>, Dropd
   }
 }
 type InputProps = {
-  actived?: boolean
-  clickToSelectAll?: boolean
+  primary?: boolean
   value?: string
   ref?: string
-  // renderStyle?: (data: SelectionData<T>) => React.CSSProperties
   style?: React.CSSProperties
   onChange?: (newValue: string, event: React.ChangeEvent<HTMLInputElement>) => void
 }
@@ -402,42 +515,39 @@ type InputState = {
 }
 export class Input extends WindowComponent<InputProps, InputState> {
   inputNode: React.RefObject<HTMLInputElement>
+  ignoreNextMouseUp?: boolean
 
   constructor(props: InputProps) {
     super(props);
     this.inputNode = React.createRef();
-
-    this.state = {
-
-    }
-  }
-
-  componentDidMount() {
-    // let aa = this.WINDOW_STATE.focus;
-
   }
 
   render() {
     let classNames = ["WINDOWS-input"]
-    if (this.props.actived) {
-      classNames.push("WINDOWS-input-actived")
+
+    if (this.props.primary) {
+      classNames.push("WINDOWS-input-primary")
     }
+
     return (
       <div className={classNames.join(" ")}>
-        context:{this.context.focus}
         <input
           ref={this.inputNode}
           value={this.props.value}
-          onClick={() => {
-            console.log("setFocus", this.COMPONENT_ID)
-            console.log("getFocused",  this.COMPONENT.getFocused())
-           
-
-            if (this.inputNode && this.inputNode.current) {
-              if (this.props.clickToSelectAll) {
+          onMouseDown={() => {
+            if (!this.COMPONENT.isFocused()) {
+              this.COMPONENT.focus()
+              if (this.inputNode && this.inputNode.current) {
+                this.ignoreNextMouseUp = true
                 this.inputNode.current.focus()
                 this.inputNode.current.select()
               }
+            }
+          }}
+          onMouseUp={(event) => {
+            if (this.ignoreNextMouseUp) {
+              this.ignoreNextMouseUp = false
+              event.preventDefault()
             }
           }}
           onChange={(event) => {
