@@ -71,7 +71,7 @@ class App extends React.PureComponent<any, AppState> {
           spellCheck="false"
         />
 
-        <section
+        {/* <section
           ref={this.textInputsim}
           onClick={this.freshCursorPosition.bind(this)}
           onKeyDown={this.freshCursorPosition.bind(this)}
@@ -79,7 +79,7 @@ class App extends React.PureComponent<any, AppState> {
           className="App-sim"
           contentEditable="true"
           spellCheck="false"
-        />
+        /> */}
         <footer className="App-state">
           <div style={{ width: 250 }} onClick={() => {
 
