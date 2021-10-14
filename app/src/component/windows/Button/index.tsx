@@ -65,9 +65,7 @@ class ButtonGroup extends React.PureComponent<ButtonGroupProps, ButtonGroupState
 
     }
     mouseUp(event: MouseEvent) {
-        console.log(event)
         this.setState({ internalActivedChildKey: this.state.lastMouseDownChildKey })
-
     }
     render() {
         const children: React.ReactElement[] = []
@@ -75,7 +73,6 @@ class ButtonGroup extends React.PureComponent<ButtonGroupProps, ButtonGroupState
         this.props.children.map((component, cid) => {
             if (component.type === Button) {
                 const thisKey = (typeof component.key === "string" || typeof (component.key) === "number") ? String(component.key) : `ButtonGroup-${cid}`
-                console.log("component", component)
                 children.push(React.cloneElement<ButtonProps>(
                     component,
                     {

@@ -19,11 +19,17 @@ type WindowProps = {
   width?: number
   height?: number
   title: string
+  onClose?: () => void
+  visible?: boolean
 }
 type WindowState = {
+  /**window是否显示 */
+  visible: boolean
+  /**style的display属性 */
   display: boolean
   windowFocus: string
 }
+type Window_TitleButton = "minimize" | "maximize" | "close"
 export class Window extends React.PureComponent<WindowProps, WindowState> {
   WINDOW: React.RefObject<HTMLDivElement>
   WINDOW_title: React.RefObject<HTMLDivElement>
@@ -32,6 +38,7 @@ export class Window extends React.PureComponent<WindowProps, WindowState> {
   mouseMovingTitleBarOffsetY: number
 
   titleHeight: number
+  titleButtonWidth: number
   left: number
   top: number
 
@@ -44,15 +51,24 @@ export class Window extends React.PureComponent<WindowProps, WindowState> {
     this.mouseMovingTitleBarOffsetY = 0
 
     this.titleHeight = 30
+    this.titleButtonWidth = 45
     this.left = 60
     this.top = 60
+    if (props.width) {
+      const webViewWidth = window.innerWidth
+      this.left = Math.max(Math.round((webViewWidth - props.width) / 2), 0)
+    }
+    if (props.height) {
+      const webViewHeight = window.innerHeight
+      this.top = Math.max(Math.round((webViewHeight - props.height) / 2), 0)
+    }
 
     this.state = {
+      visible: false,
       display: false,
       windowFocus: "_unset"
     }
   }
-
 
   async componentDidMount() {
     if (this.WINDOW_title?.current && this.WINDOW?.current) {
@@ -64,10 +80,8 @@ export class Window extends React.PureComponent<WindowProps, WindowState> {
       console.error("WINDOW", "not readt")
     }
     setTimeout(() => {
-      this.setState({
-        display: true,
-      })
-    }, 1000);
+      this.checkWindowVisible()
+    }, 0);
   }
   componentWillUnmount() {
     if (this.WINDOW_title?.current) {
@@ -75,11 +89,12 @@ export class Window extends React.PureComponent<WindowProps, WindowState> {
     }
     if (this.WINDOW?.current) {
       this.WINDOW.current.addEventListener('mousedown', this.windowMouseDown.bind(this));
-
     }
     document.removeEventListener('mouseup', this.mouseup);
     document.removeEventListener('mousemove', this.mousemove);
-
+  }
+  componentDidUpdate() {
+    this.checkWindowVisible()
   }
   render() {
     let windowHeight = 400
@@ -88,12 +103,16 @@ export class Window extends React.PureComponent<WindowProps, WindowState> {
     }
     const classNames = ["WINDOWS-window"]
     let scale = 0.9
-    // let transition = "transform 0.3s, opacity 0.3s"
     if (this.state.display) {
       classNames.push("WINDOWS-window-display")
-      scale = 1
-      // transition = "transform 0s, opacity 0s"
+
     }
+    if (this.state.visible) {
+      classNames.push("WINDOWS-window-visible")
+      scale = 1
+    }
+
+    const titleButtons: Window_TitleButton[] = ["minimize", "maximize", "close"]
 
     return (
       <WindowContext.Provider value={{
@@ -109,9 +128,17 @@ export class Window extends React.PureComponent<WindowProps, WindowState> {
             transform: `translate(${this.left}px, ${this.top}px) scale(${scale})`,
             // transition,
           }}>
-          <div ref={this.WINDOW_title} className={"WINDOWS-title"}>
+          <div ref={this.WINDOW_title} className={"WINDOWS-title"}
+            style={{ width: `calc(100% - ${titleButtons.length * this.titleButtonWidth}px)` }}
+          >
             {this.props.title}
           </div>
+          {Array.from(titleButtons, (item) => {
+            return <div key={item} className={`WINDOWS-titleButton WINDOWS-titleButton-${item}`}
+              style={{ width: this.titleButtonWidth }}
+              onClick={() => { this.titleButtonAction(item) }} />
+          })}
+
           <div className={"WINDOWS-content"}>
             {this.props.children}
           </div>
@@ -121,7 +148,6 @@ export class Window extends React.PureComponent<WindowProps, WindowState> {
   }
 
   titleBarMousedown(event: MouseEvent) {
-    console.log("titleBarMousedown")
     this.moving = true
 
     const left = event.offsetX
@@ -131,7 +157,6 @@ export class Window extends React.PureComponent<WindowProps, WindowState> {
     this.mouseMovingTitleBarOffsetY = top
   }
   windowMouseDown(event: MouseEvent) {
-    console.log("windowMouseDown")
     if (!event.target) {
       return
     }
@@ -158,17 +183,54 @@ export class Window extends React.PureComponent<WindowProps, WindowState> {
     if (this.WINDOW?.current) {
       this.left = left
       this.top = top
-      let scale = this.state.display ? 1 : 0.9
+      let scale = this.state.visible ? 1 : 0.9
 
       this.WINDOW.current.style.transition = "transform 0s, opacity 0s"
       this.WINDOW.current.style.transform = `translate(${left}px, ${top}px) scale(${scale})`
     }
   }
-
   mouseup() {
     if (this.moving) {
       console.log("mouseup")
       this.moving = false
+    }
+  }
+  checkWindowVisible() {
+    if (this.props.visible !== this.state.visible) {
+      if (this.props.visible) {
+        this.openWindow()
+      } else {
+        this.closeWindow()
+      }
+    }
+  }
+  openWindow() {
+    if (this.WINDOW.current) {
+      this.WINDOW.current.style.transition = ""
+    }
+    this.setState({ display: true, })
+    setTimeout(() => {
+      this.setState({ visible: true })
+    }, 0);
+  }
+  closeWindow() {
+    console.log("closeWindow")
+    if (this.WINDOW.current) {
+      this.WINDOW.current.style.transition = ""
+    }
+    this.setState({ visible: false, })
+    setTimeout(() => {
+      this.setState({ display: false })
+    }, 1000);
+  }
+  titleButtonAction(type: Window_TitleButton) {
+    switch (type) {
+      case "close":
+        if (this.props.onClose) { this.props.onClose() }
+        break;
+
+      default:
+        break;
     }
   }
 }
@@ -177,15 +239,21 @@ type ModalProps = {
   width?: number
   height?: number
   title?: string
+  onOK?: () => void
+  onCancel?: () => void
 }
 type ModalState = {
-  windowFocus: string
+  visible?: boolean
 }
 export class Modal extends React.PureComponent<ModalProps, ModalState> {
   footerHeight: number
   constructor(props: ModalProps) {
     super(props);
     this.footerHeight = 48
+    this.state = {
+      visible: true
+
+    }
   }
 
   async componentDidMount() {
@@ -195,11 +263,12 @@ export class Modal extends React.PureComponent<ModalProps, ModalState> {
 
   }
   render() {
-
     return (
       <Window
         title={this.props.title || "无标题"}
         width={this.props.width}
+        visible={this.state.visible}
+        onClose={this.onCancel.bind(this)}
         height={((this.props.height || 0) + this.footerHeight)}>
         <div style={{
           height: this.props.height, width: "100%",
@@ -213,16 +282,33 @@ export class Modal extends React.PureComponent<ModalProps, ModalState> {
             right: 9,
             bottom: 6,
           }}>
-            <Button type="primary">
+            <Button type="primary" onClick={this.onOK.bind(this)}>
               {"确定"}
             </Button>
-            <Button>
+            <Button onClick={this.onCancel.bind(this)}>
               {"取消"}
             </Button>
           </Button.Group>
         </div>
       </Window >
     )
+  }
+  onCancel() {
+    this.closeModal()
+    if (this.props.onCancel) {
+      this.props.onCancel()
+    }
+  }
+  onOK() {
+    this.closeModal()
+    if (this.props.onOK) {
+      this.props.onOK()
+    }
+  }
+  closeModal() {
+    this.setState({
+      visible: false
+    })
   }
 }
 

@@ -1,4 +1,5 @@
 .WINDOWS-window {
+    display: none;
     background: #d9d9d9;
     user-select: none;
     position: fixed;
@@ -9,10 +10,13 @@
     text-align: left;
     font-family: sans-serif;
     opacity: 0;
-    // transform: translate(0px, 0px) scale(1);
     transition: transform 0.3s, opacity 0.3s;
 
     &.WINDOWS-window-display {
+        display: block;
+    }
+
+    &.WINDOWS-window-visible {
         opacity: 1;
     }
 
@@ -24,15 +28,50 @@
     --General_Border: #828790;
     --General_Border-Actived: #0078D7;
 
-    --titleHeight: 30px;
+    --titleHeight: 29px;
 
     .WINDOWS-title {
+        vertical-align: top;
         height: var(--titleHeight);
         background-color: var(--themeTitleBackgroundColor);
         color: var(--themeTitleColor);
         padding-left: 7px;
         line-height: 30px;
         font-size: 12px;
+        width: 100%;
+        display: inline-block;
+    }
+
+    .WINDOWS-titleButton {
+        display: inline-block;
+        vertical-align: top;
+        height: var(--titleHeight);
+        background-color: var(--themeTitleBackgroundColor);
+
+        &:hover {
+            background-color: #E5E5E5;
+        }
+
+        &:active {
+            background-color: #CCCCCC
+        }
+
+        &.WINDOWS-titleButton-minimize {}
+
+        &.WINDOWS-titleButton-maximize {}
+
+        &.WINDOWS-titleButton-close {
+            ::before{
+                content: "A";
+            }
+            &:hover {
+                background-color: #E81123;
+            }
+
+            &:active {
+                background-color: #F1707A
+            }
+        }
     }
 
     .WINDOWS-content {

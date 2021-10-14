@@ -170,6 +170,16 @@ export class FontSelection extends React.PureComponent<{}, AppState> {
                 title={"字体"}
                 width={427}
                 height={451}
+                onCancel={() => {
+                    setTimeout(() => {
+                        // alert("onCancel")
+                    }, 1000);
+                }}
+                onOK={() => {
+                    setTimeout(() => {
+                        // alert("onOK")
+                    }, 1000);
+                }}
             >
                 <div className={"fontSelection"}>
                     <div style={{ width: 172, marginLeft: 12 }}>
