@@ -1,0 +1,56 @@
+.WINDOWS-button {
+    margin: 5px;
+
+    height: 28px;
+    width: 77px;
+    background-color: #E1E1E1;
+    border-style: solid;
+    border-color: #ADADAD;
+    border-width: 1px;
+    transition: background-color 0.4s, border-color 0.4s;
+
+    &.WINDOWS-button-primary {
+        border-color: #0078D7;
+
+        .WINDOWS-button-content {
+            border-color: #0076d7;
+        }
+    }
+
+    &:hover {
+        background-color: #E5F1FB;
+        border-color: #0078D7;
+
+        .WINDOWS-button-content {
+            border-color: #0076d700;
+        }
+    }
+
+    &:active {
+        background-color: #CCE4F7;
+        border-color: #005499;
+
+        .WINDOWS-button-content {
+            border-color: #0076d700;
+        }
+    }
+
+    .WINDOWS-button-content {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+        border-style: solid;
+        border-color: #0076d700;
+        border-width: 1px;
+        transition: border-color 0.4s;
+        font-size: 12px;
+        touch-action: none;
+    }
+}
+
+.WINDOWS-buttonGroup {
+    display: flex;
+    justify-content: flex-end;
+}

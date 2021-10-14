@@ -1,20 +1,19 @@
 import * as React from 'react';
-import './App.css';
+import './App.less';
 import { getFontList } from "./function/getFontList"
+import { md5 } from "./function/hash"
 import { diffChars } from "diff"
 import { type } from 'os';
 import { setInterval } from 'timers';
+import { createInvisibleDOM, removeDOM } from "./function/createInvisibleDOM"
+import { FontSelection } from "./component/fontSelection"
+import { GUID } from "./function/guid"
 
-const GUID = function () {
-  function S4() {
-    return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
-  }
-  return (S4() + S4() + "-" + S4() + "-" + S4() + "-" + S4() + "-" + S4() + S4() + S4());
-}
 
 type AppState = {
   posY: number
   posX: number
+  lastContentHTML: string
   lines: {
     elements: {
       text: string,
@@ -25,63 +24,68 @@ type AppState = {
   }[]
 }
 class App extends React.PureComponent<any, AppState> {
-  textInput: React.RefObject<HTMLElement>
+  textInput: React.RefObject<HTMLDivElement> | undefined
+  textInputsim: React.RefObject<HTMLDivElement> | undefined
+  fontTemp: React.RefObject<HTMLDivElement> | undefined
   constructor(props: {}) {
     super(props);
     this.textInput = React.createRef();
+    this.textInputsim = React.createRef();
+    this.fontTemp = React.createRef();
     this.state = {
       posY: 1,
       posX: 1,
+      lastContentHTML: "",
       lines: []
     }
   }
 
 
-  componentDidMount() {
-    getFontList()
-
-
-  }
-  renderTextArea() {
-    if (this.textInput.current) {
-      console.error("textInput is not Ready")
-      return
-    }
-    console.log("lines", this.state.lines)
-    const newArea = Array.from(this.state.lines, (item, id) => {
-      for (let element of item.elements) {
-        // element.id
-        // element.text
-      }
-      return `<div>${item}</div>`
-    })
-    if (this.textInput.current) {
-      // this.textInput.current.innerHTML = newArea.join("")
-    }
+  async componentDidMount() {
+    // if (!this.fontTemp || !this.fontTemp.current) {
+    //   return
+    // }
+    // const fontInstalled = await getFontList()
+    // console.log("fontInstalled", fontInstalled)
 
   }
+
   render() {
-    console.log("lines", this.state.lines)
-    setTimeout(() => {
-      this.renderTextArea()
-    }, 0);
     return (
       <div className="App">
-        <div id="temp" style={{ height: 0, overflow: "hidden", background: "red", width: "100%" }} />
+        <div id="tempTop" style={{
+          // height: 0,
+          overflow: "hidden", background: "red", width: "100%"
+        }} >
+          <div id="temp" />
+          <div id="fontTemp" ref={this.fontTemp} />
+        </div>
+        <FontSelection />
         <section
           ref={this.textInput}
-          id="txt1"
           onClick={this.freshCursorPosition.bind(this)}
-          onInput={this.freshCursorPosition.bind(this)}
-          onBeforeInput={(event) => { console.log("onBeforeInput", event) }}
-          onPaste={(event) => { this.onBeforeInput(event.clipboardData, event) }}
-          // onDrop={(event) => { this.onBeforeInput(event.dataTransfer, event) }}
-          onDrop={(event) => { event.preventDefault() }}
+          onKeyDown={this.freshCursorPosition.bind(this)}
+          onInput={this.afterInput.bind(this)}
           className="App-content"
           contentEditable="true"
           spellCheck="false"
         />
+
+        <section
+          ref={this.textInputsim}
+          onClick={this.freshCursorPosition.bind(this)}
+          onKeyDown={this.freshCursorPosition.bind(this)}
+          onInput={this.afterInput.bind(this)}
+          className="App-sim"
+          contentEditable="true"
+          spellCheck="false"
+        />
         <footer className="App-state">
+          <div style={{ width: 250 }} onClick={() => {
+
+          }}>
+            {"点击 "}
+          </div>
           <div style={{ width: 250 }}>
             {`第 ${this.state.posY} 行，第 ${this.state.posX} 列`}
           </div>
@@ -107,46 +111,12 @@ class App extends React.PureComponent<any, AppState> {
       </div>
     );
   }
-  // onInput(event: React.FormEvent<HTMLElement>) {
-  //   // this.contentFilter()
-  //   this.freshCursorPosition()
-  // }
-  onBeforeInput(DataTransfer: DataTransfer, event: React.FormEvent<HTMLElement>) {
-    console.log("onBeforeInputCLASS.selection", getSelection())
-    console.log("onBeforeInputCLASS", event)
-    // if (this.state.posY !== 1) {
-    event.preventDefault()
-    // }
-
-    // const pldata2: string = DataTransfer.getData("text/plain")
-    // console.log("pldata2", pldata2)
-    const pldata: string = DataTransfer.getData('text/html')
-    console.log("pldata",)
-    const domparser = new DOMParser();
-    const doc = domparser.parseFromString(pldata, "text/html")
-    console.log("body", doc)
-    const newTexts = this.newContentParser(doc.body.innerHTML)
-    console.log("newTexts", newTexts)
-
-    let newLines: AppState["lines"] = []
-    for (let text of newTexts) {
-      newLines.push({
-        elements: [{
-          text: text,
-          id: GUID(),
-          type: "text"
-        }],
-        lid: GUID()
-      })
-    }
-
-
-    this.setState({
-      lines: newLines
-    })
-
+  afterInput(event: React.FormEvent<HTMLElement>) {
+    this.contentFilter()
+    // setTimeout(this.contentFilter, 0);
+    this.freshCursorPosition()
   }
-  newContentParser(html: string): string[] {
+  contentFilter() {
     function escapeHtmlText(html: string) {
       var text = document.createTextNode(html);
       var p = document.createElement('p');
@@ -176,7 +146,6 @@ class App extends React.PureComponent<any, AppState> {
         }
         node = walker.nextNode();
       }
-      console.log("paragraph", paragraph)
       return paragraph.innerHTML;
     }
     function childNodeTextsSymbolRecover(html: string): string {
@@ -205,25 +174,184 @@ class App extends React.PureComponent<any, AppState> {
       html = html.replaceAll("\n", "<br>")
       return html
     }
-    const newLines = []
+    function elementRemoveBR(thisElement: HTMLElement): void {
+      const walker = document.createTreeWalker(thisElement);
+      let node = walker.nextNode();
+      const removeList: Node[] = []
 
+      while (node !== null) {
+        if (Node.ELEMENT_NODE !== node.nodeType) {
+          const thisNode: HTMLElement = node as unknown as HTMLElement
+          if (thisNode.tagName === "BR") {
+            removeList.push(thisNode)
+          }
+        }
+        node = walker.nextNode();
+      }
 
-    // var paragraph = document.createElement('aside');
-    var paragraph = document.getElementById("temp")
-    if (!paragraph) {
-      return []
+      for (let dom of removeList) {
+        dom.parentNode?.removeChild(dom)
+      }
     }
-    paragraph.innerHTML = (html)
-    // console.log("p2", "paragraph", paragraph)
-    paragraph.innerHTML = childNodeTextsEscape(html)
+    function isNodeNeed2BeUpdate(thisElement: HTMLElement): boolean {
+      const thisMD5 = thisElement.getAttribute("inner_html_md5") || ""
+      const newMD5 = md5(thisElement.innerHTML)
+      if (thisMD5 === newMD5) {
+        return false
+      }
+      thisElement.setAttribute("inner_html_md5", newMD5)
 
-    newLines.push(...paragraph.innerText.split("\n"))
+      if (thisElement.nodeName !== "DIV") {
+        return true
+      }
 
-    // paragraph.innerHTML = htmlAddBRs(paragraph.innerText)
-    // paragraph.innerHTML = childNodeTextsSymbolRecover(paragraph.innerHTML)
-    // console.log("p3", "childNodeTextsSymbolRecover", paragraph.innerHTML)
-    // console.log("p4", "paragraph", paragraph)
-    return newLines
+      const textEscaped = escapeHtmlText(thisElement.innerText)
+      const innerHTML = thisElement.innerHTML
+      if (textEscaped === innerHTML) {
+        return false
+      }
+      //检查子节点
+      const childNodes = thisElement.childNodes
+      elementRemoveBR(thisElement)
+      for (let node of childNodes) {
+        if (Node.TEXT_NODE === node.nodeType) {
+          //文字节点略过，看看其他的node
+        } else if (Node.ELEMENT_NODE !== node.nodeType) {
+          console.log("treu", 1, node.nodeType)
+          return true
+        } else if (node.nodeName === "SPAN") {
+          const childSpanElement: HTMLElement = node as unknown as HTMLElement
+          const childSpanElementTextEscaped = escapeHtmlText(childSpanElement.innerText)
+          const childSpanElementInnerHTML = childSpanElement.innerHTML
+          if (childSpanElementTextEscaped !== childSpanElementInnerHTML) {
+            console.log("treu", 2)
+            return true
+
+          }
+        } else if (node.nodeName === "BR") {
+
+        } else {
+          console.log("treu", 3, node.nodeName)
+
+          return true
+
+        }
+      }
+
+      return false
+    }
+
+    if (!this.textInput || !this.textInput.current) {
+      console.error('textInput not ready')
+      return
+    }
+    if (!this.textInputsim || !this.textInputsim.current) {
+      console.error('textInputsim not ready')
+      return
+    }
+    const selection = getSelection()
+    const textInputDom = this.textInput.current
+    const textInputsimDom = this.textInputsim.current
+    const childNodes = textInputDom.childNodes
+    const removeList: Node[] = []
+    const addLinesList: {
+      before: Node,
+      text: string
+    }[] = []
+
+    textInputsimDom.innerHTML = textInputDom.innerHTML
+
+
+
+    if (this.state.lastContentHTML.length === 0) {
+      textInputDom.innerHTML = `<div>${textInputDom.innerHTML}</div>`
+    }
+
+    this.setState({
+      lastContentHTML: textInputDom.innerHTML
+    })
+    const stage = document.createElement('div');
+
+    for (let node of childNodes) {
+      if (Node.TEXT_NODE === node.nodeType) {
+        removeList.push(node)
+        addLinesList.push({
+          before: node,
+          text: node.textContent || ""
+        })
+      } else if (Node.ELEMENT_NODE !== node.nodeType) {
+        removeList.push(node)
+      } else {
+        const thisElement: HTMLElement = node as unknown as HTMLElement
+        switch (thisElement.tagName) {
+          case "BR":
+            removeList.push(thisElement)
+            break;
+          case "SPAN":
+          case "B":
+
+            break;
+
+          default:
+            if (isNodeNeed2BeUpdate(thisElement)) {
+              removeList.push(node)
+              console.log("isNodeNeed2BeUpdate", true, thisElement)
+              const tempDom = createInvisibleDOM()
+              tempDom.innerHTML = childNodeTextsEscape(thisElement.innerHTML)
+              const newLines = []
+              console.log("tempDom.innerHTML", tempDom.innerHTML,)
+              console.log("tempDom.innerText", tempDom.innerText, tempDom.innerText.split("\n"))
+              newLines.push(...tempDom.innerText.split("\n"))
+              console.log("newLines", newLines)
+              for (let text of newLines) {
+                addLinesList.push({
+                  before: thisElement,
+                  text: childNodeTextsSymbolRecover(text)
+                })
+              }
+              removeDOM(tempDom)
+            }
+            break;
+        }
+        // if (thisElement.tagName === "BR") {
+        //   removeList.push(thisElement)
+        // } else if (thisElement.tagName === "SPAN") {
+        //   removeList.push(thisElement)
+        // } else if (isNodeNeed2BeUpdate(thisElement)) {
+        //   removeList.push(node)
+        //   console.log("isNodeNeed2BeUpdate", true, thisElement)
+        //   const tempDom = createInvisibleDOM()
+        //   tempDom.innerHTML = childNodeTextsEscape(thisElement.innerHTML)
+        //   const newLines = []
+        //   console.log("tempDom.innerHTML", tempDom.innerHTML,)
+        //   console.log("tempDom.innerText", tempDom.innerText, tempDom.innerText.split("\n"))
+        //   newLines.push(...tempDom.innerText.split("\n"))
+        //   console.log("newLines", newLines)
+        //   for (let text of newLines) {
+        //     addLinesList.push({
+        //       before: thisElement,
+        //       text: childNodeTextsSymbolRecover(text)
+        //     })
+        //   }
+        //   removeDOM(tempDom)
+        // } else {
+        //   // console.log("NOT", "isNodeNeed2BeUpdate", thisElement)
+        // }
+
+      }
+    }
+    // return
+
+    //！先insert后remove
+    for (let line of addLinesList) {
+      var paragraph = document.createElement('div');
+      paragraph.innerHTML = line.text
+      textInputDom.insertBefore(paragraph, line.before);
+    }
+    for (let dom of removeList) {
+      dom.parentNode?.removeChild(dom)
+    }
+
   }
   freshCursorPosition() {
     const newPos = this.getCurrentCursorPosition()
@@ -231,9 +359,15 @@ class App extends React.PureComponent<any, AppState> {
       posX: newPos.x,
       posY: newPos.y,
     })
+    setTimeout(() => {
+      const newPos = this.getCurrentCursorPosition()
+      this.setState({
+        posX: newPos.x,
+        posY: newPos.y,
+      })
+    }, 100);
   }
   getCurrentCursorPosition(): { x: number, y: number } {
-    console.log("getCurrentursorPosition")
     let X = 1
     let Y = 1
     if (this.textInput) {
@@ -263,6 +397,7 @@ class App extends React.PureComponent<any, AppState> {
       x: X, y: Y
     }
   }
+
 }
 
 
