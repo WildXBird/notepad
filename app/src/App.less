@@ -30,6 +30,7 @@ html {
 
 body {
   height: 100%;
+  margin: 0;
 }
 
 #root {
@@ -57,19 +58,12 @@ body {
 }
 
 .App-content {
-  /* background-color: #fff; */
-  /* min-height: 100vh; */
   display: block;
-  /* flex-direction: column; */
-  /* align-items: center; */
-  /* justify-content: center; */
-  /* font-size: calc(10px + 2vmin); */
-  /* color: white; */
   text-align: left;
   padding-left: 3px;
   padding-right: 6px;
-  /* height: calc(100% - var(--state-bar-height)); */
-  height: calc((100% - var(--state-bar-height)) / 2);
+  height: calc(100% - var(--state-bar-height)); 
+  // height: calc((100% - var(--state-bar-height)) / 2);
   width: 100%;
   overflow: scroll;
   white-space: nowrap;
@@ -79,10 +73,10 @@ body {
   line-height: var(--settings-line-height);
 
 }
-.App-sim{
-  text-align: left;
-  height: calc((100% - var(--state-bar-height)) / 2);
-}
+// .App-sim{
+//   text-align: left;
+//   height: calc((100% - var(--state-bar-height)) / 2);
+// }
 
 .App-content>div {
   white-space: nowrap;
