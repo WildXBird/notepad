@@ -8,6 +8,7 @@ import { setInterval } from 'timers';
 import { createInvisibleDOM, removeDOM } from "./function/createInvisibleDOM"
 import { FontSelection } from "./component/fontSelection"
 import { GUID } from "./function/guid"
+import { Window } from "./component/windows"
 
 
 type AppState = {
@@ -42,12 +43,7 @@ class App extends React.PureComponent<any, AppState> {
 
 
   async componentDidMount() {
-    // if (!this.fontTemp || !this.fontTemp.current) {
-    //   return
-    // }
-    // const fontInstalled = await getFontList()
-    // console.log("fontInstalled", fontInstalled)
-
+    // Window.open()
   }
 
   render() {

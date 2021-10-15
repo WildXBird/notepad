@@ -39,8 +39,14 @@ export class Window extends React.PureComponent<WindowProps, WindowState> {
 
   titleHeight: number
   titleButtonWidth: number
+  titleIcon: {
+    [K in Window_TitleButton]: React.SVGProps<SVGSVGElement>;
+  }
   left: number
   top: number
+
+
+  static open: () => Promise<void>;
 
   constructor(props: WindowProps) {
     super(props);
@@ -63,6 +69,19 @@ export class Window extends React.PureComponent<WindowProps, WindowState> {
       this.top = Math.max(Math.round((webViewHeight - props.height) / 2), 0)
     }
 
+    this.titleIcon = {
+      minimize: <svg x="0px" y="0px" viewBox="0 0 10 1" data-radium="true" style={{ width: 10, height: 10 }}>
+        <line x1="0" y1="0" x2="10" y2="0" style={{ stroke: "#000000", strokeWidth: 1 }}></line>
+      </svg>,
+      maximize: <svg x="0px" y="0px" viewBox="0 0 10 10" data-radium="true" style={{ width: 10, height: 10 }}>
+        <path fill="#000000" d="M0,0v10h10V0H0z M9,9H1V1h8V9z" />
+      </svg>,
+      close: <svg x="0px" y="0px" viewBox="0 0 10 10" data-radium="true" style={{ width: 10, height: 10 }}>
+        <polygon fill="#000000" points="10,0.7 9.5,0 5.1,4.4 0.7,0 0,0.7 4.4,5.1 0,9.5 0.7,10 5.1,5.8 9.5,10 10,9.5 5.8,5.1 "></polygon>
+      </svg>,
+
+    }
+
     this.state = {
       visible: false,
       display: false,
@@ -73,9 +92,13 @@ export class Window extends React.PureComponent<WindowProps, WindowState> {
   async componentDidMount() {
     if (this.WINDOW_title?.current && this.WINDOW?.current) {
       this.WINDOW_title.current.addEventListener('mousedown', this.titleBarMousedown.bind(this));
+      this.WINDOW_title.current.addEventListener("touchstart", this.titleBarMousedown.bind(this));
       this.WINDOW.current.addEventListener('mousedown', this.windowMouseDown.bind(this));
+      this.WINDOW.current.addEventListener('touchstart', this.windowMouseDown.bind(this));
       document.addEventListener('mouseup', this.mouseup.bind(this));
+      document.addEventListener("touchend", this.mouseup.bind(this));
       document.addEventListener('mousemove', this.mousemove.bind(this));
+      document.addEventListener("touchmove", this.mousemove.bind(this));
     } else {
       console.error("WINDOW", "not readt")
     }
@@ -86,12 +109,16 @@ export class Window extends React.PureComponent<WindowProps, WindowState> {
   componentWillUnmount() {
     if (this.WINDOW_title?.current) {
       this.WINDOW_title.current.removeEventListener('mousedown', this.titleBarMousedown);
+      this.WINDOW_title.current.removeEventListener('touchstart', this.titleBarMousedown);
     }
     if (this.WINDOW?.current) {
       this.WINDOW.current.addEventListener('mousedown', this.windowMouseDown.bind(this));
+      this.WINDOW.current.addEventListener('touchstart', this.windowMouseDown.bind(this));
     }
     document.removeEventListener('mouseup', this.mouseup);
+    document.removeEventListener('touchend', this.mouseup);
     document.removeEventListener('mousemove', this.mousemove);
+    document.removeEventListener('touchmove', this.mousemove);
   }
   componentDidUpdate() {
     this.checkWindowVisible()
@@ -136,7 +163,9 @@ export class Window extends React.PureComponent<WindowProps, WindowState> {
           {Array.from(titleButtons, (item) => {
             return <div key={item} className={`WINDOWS-titleButton WINDOWS-titleButton-${item}`}
               style={{ width: this.titleButtonWidth }}
-              onClick={() => { this.titleButtonAction(item) }} />
+              onClick={() => { this.titleButtonAction(item) }} >
+              <div>{this.titleIcon[item]}</div>
+            </div>
           })}
 
           <div className={"WINDOWS-content"}>
@@ -147,39 +176,63 @@ export class Window extends React.PureComponent<WindowProps, WindowState> {
     )
   }
 
-  titleBarMousedown(event: MouseEvent) {
-    this.moving = true
+  titleBarMousedown(event: MouseEvent | TouchEvent) {
+    event.preventDefault()//IOS
 
-    const left = event.offsetX
-    const top = event.offsetY
+    this.moving = true
+    let left: number
+    let top: number
+
+    if (event instanceof MouseEvent) {
+      left = event.offsetX
+      top = event.offsetY
+    } else if (event.target instanceof HTMLElement) {
+      var rect = event.target.getBoundingClientRect();
+      var x = event.targetTouches[0].pageX - rect.left;
+      var y = event.targetTouches[0].pageY - rect.top;
+      left = x
+      top = y
+    } else {
+      left = 0
+      top = 0
+    }
 
     this.mouseMovingTitleBarOffsetX = left
     this.mouseMovingTitleBarOffsetY = top
   }
-  windowMouseDown(event: MouseEvent) {
+  windowMouseDown(event: MouseEvent | TouchEvent) {
     if (!event.target) {
       return
     }
+    if (event.target instanceof HTMLElement) {
 
-    const target: HTMLElement = event.target as HTMLElement
-    switch (target.tagName) {
-      case "INPUT":
-      case "A":
-        return
+      switch (event.target.tagName) {
+        case "INPUT":
+        case "A":
 
-      default:
-        break;
+          return
+
+        default:
+          break;
+      }
     }
+
 
     event.preventDefault()
   }
-  mousemove(event: MouseEvent) {
-    if (!this.moving) {
-      return
+  mousemove(event: MouseEvent | TouchEvent) {
+    if (!this.moving) { return }
+
+    let left: number
+    let top: number
+    if (event instanceof MouseEvent) {
+      left = event.clientX - this.mouseMovingTitleBarOffsetX
+      top = event.clientY - this.mouseMovingTitleBarOffsetY
+    } else {
+      left = (event.touches[0].clientX) - this.mouseMovingTitleBarOffsetX
+      top = (event.touches[0].clientY) - this.mouseMovingTitleBarOffsetY
     }
 
-    const left = event.clientX - this.mouseMovingTitleBarOffsetX
-    const top = event.clientY - this.mouseMovingTitleBarOffsetY
     if (this.WINDOW?.current) {
       this.left = left
       this.top = top
@@ -234,6 +287,7 @@ export class Window extends React.PureComponent<WindowProps, WindowState> {
     }
   }
 }
+
 
 type ModalProps = {
   width?: number
@@ -532,7 +586,6 @@ export class DropdownSelect<T> extends React.PureComponent<SelectProps<T>, Dropd
             {currentSelectedText}
           </div>
           <div className={"WINDOWS-dropdownSelect-arrow"} />
-          <input className={"WINDOWS-dropdownSelect-fakeInput"} />
         </div>
         <div className={"WINDOWS-dropdownSelect-selections-limiter"}>
           <div className={"WINDOWS-dropdownSelect-selections"}
