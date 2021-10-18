@@ -26,7 +26,7 @@ export async function getFontList() {
     element.innerHTML = ""
     let waitingCheckDomList: HTMLSpanElement[] = []
     let outterDiv = document.createElement("div");
-
+    let startTime = new Date().valueOf()
     for (let fontInfo of frontList) {
         const fontCSSName = fontInfo.en_name
         let newDiv = document.createElement("span");
@@ -55,7 +55,10 @@ export async function getFontList() {
         }
     }
     removeDOM(element)
-    return [...installedFontEnNameList]
+    const result = [...installedFontEnNameList]
+    const takes = new Date().valueOf() - startTime
+    console.log(`检测了${frontList.length}种字体，找到了${result.length}种，耗时${takes}ms`)
+    return result
 }
 
 
@@ -308,7 +311,7 @@ const frontList = [
     { "cn_name": "Zapfino", "en_name": "Zapfino" },
     { "cn_name": "BodoniSvtyTwoOSITCTT-Book", "en_name": "BodoniSvtyTwoOSITCTT-Book" },
     { "cn_name": "BodoniSvtyTwoOSITCTT-Bold", "en_name": "BodoniSvtyTwoOSITCTT-Bold" },
-    { "cn_name": "BodoniSvtyTwoOSITCTT-BookIt", "en_name": "BodoniSvtyTwoOSITCTT-BookIt" },    
+    { "cn_name": "BodoniSvtyTwoOSITCTT-BookIt", "en_name": "BodoniSvtyTwoOSITCTT-BookIt" },
     {
         "cn_name": "Zhiyong Elegant",
         "en_name": "Zhiyong Elegant"
