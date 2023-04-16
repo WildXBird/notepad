@@ -9,6 +9,7 @@ import { createInvisibleDOM, removeDOM } from "./function/createInvisibleDOM"
 import { FontSelection } from "./component/fontSelection"
 import { GUID } from "./function/guid"
 import { Window } from "./component/windows"
+import { WindowMenu } from './menu';
 
 
 type AppState = {
@@ -57,6 +58,7 @@ class App extends React.PureComponent<any, AppState> {
           <div id="fontTemp" ref={this.fontTemp} />
         </div>
         <FontSelection />
+        <WindowMenu/>
         <section
           ref={this.textInput}
           onClick={this.freshCursorPosition.bind(this)}
@@ -65,7 +67,10 @@ class App extends React.PureComponent<any, AppState> {
           className="App-content"
           contentEditable="true"
           spellCheck="false"
-        />
+
+        >
+          {Array.from(new Array(100), () => <div>11</div>)}
+        </section>
 
         {/* <section
           ref={this.textInputsim}
