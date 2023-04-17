@@ -20,6 +20,8 @@ const installZeroWidthFontIfNeed = function (): boolean {
 }
 
 export async function getFontList() {
+    const frontList = await newFontAPI() || defaultfrontList
+
     const element = createInvisibleDOM()
     installZeroWidthFontIfNeed()
 
@@ -63,7 +65,8 @@ export async function getFontList() {
 
 
 
-const frontList = [
+
+const defaultfrontList = [
     { "cn_name": "Copperplate-Light", "en_name": "Copperplate-Light" },
     { "cn_name": "Copperplate", "en_name": "Copperplate" },
     { "cn_name": "Copperplate-Bold", "en_name": "Copperplate-Bold" },
@@ -2213,6 +2216,46 @@ const frontList = [
         "en_name": "Yu Gothic UI Semilight"
     }
 ]
+{
+
+
+}
+const newFontAPI = async () => {
+    const frontList = [...defaultfrontList]
+    //调用新 API补全字体
+    if ("queryLocalFonts" in globalThis) {
+        //@ts-ignore
+        const method = globalThis.queryLocalFonts
+        const localFontsList = (await method()) as {
+            family: string
+            fullName: string
+            postscriptName: string
+        }[]
+        const family: { [familyName: string]: { fullName: string } } = {}
+        for (let font of localFontsList) {
+            if (!family[font.family]) {
+                family[font.family] = { fullName: font.fullName }
+            }
+        }
+        for (let familyName in family) {
+            frontList.push({
+                "cn_name": familyName,
+                "en_name": familyName
+            })
+        }
+        //去重
+        const idList: { [familyName: string]: boolean } = {}
+        const clearList: { "cn_name": string, "en_name": string }[] = []
+        Array.from(frontList, (item) => {
+            if (!idList[item.en_name]) {
+                idList[item.en_name] = true
+                clearList.push(item)
+            }
+        })
+        return clearList
+    }
+
+}
 
 export type fontWeight = "bolder" | "bold" | "normal" | "lighter"
 export function isSupportFontWeight(fontFamily: string, fontWeight: fontWeight) {
