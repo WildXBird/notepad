@@ -21,6 +21,7 @@ type WindowProps = {
   title: string
   onClose?: () => void
   visible?: boolean
+  titleBarActions?: Window_TitleButton[]
 }
 type WindowState = {
   /**window是否显示 */
@@ -139,7 +140,7 @@ export class Window extends React.PureComponent<WindowProps, WindowState> {
       scale = 1
     }
 
-    const titleButtons: Window_TitleButton[] = ["minimize", "maximize", "close"]
+    const titleButtons: Window_TitleButton[] = this.props.titleBarActions || ["minimize", "maximize", "close"]
 
     return (
       <WindowContext.Provider value={{
@@ -155,25 +156,31 @@ export class Window extends React.PureComponent<WindowProps, WindowState> {
             transform: `translate(${this.left}px, ${this.top}px) scale(${scale})`,
             // transition,
           }}>
-          <div ref={this.WINDOW_title} className={"WINDOWS-title"}
-            style={{ width: `calc(100% - ${titleButtons.length * this.titleButtonWidth}px)` }}
-          >
-            {this.props.title}
-          </div>
-          {Array.from(titleButtons, (item) => {
-            return <div key={item} className={`WINDOWS-titleButton WINDOWS-titleButton-${item}`}
-              style={{ width: this.titleButtonWidth }}
-              onClick={() => { this.titleButtonAction(item) }} >
-              <div>{this.titleIcon[item]}</div>
+          <div className={"WINDOWS-titleBar"} >
+            <div ref={this.WINDOW_title} className={"WINDOWS-titleBar-title"} style={{ paddingRight: `${titleButtons.length * this.titleButtonWidth}px` }}>
+              {this.props.title}
             </div>
-          })}
+            {this.renderTitleButtons(titleButtons)}
 
+
+          </div>
           <div className={"WINDOWS-content"}>
             {this.props.children}
           </div>
         </div>
       </WindowContext.Provider>
     )
+  }
+  renderTitleButtons(titleButtons: Window_TitleButton[]) {
+    return Array.from(titleButtons, (item) => {
+      if (Array.isArray(this.props.titleBarActions) && (new Set(this.props.titleBarActions).has(item))) {
+        return <div key={item} className={`WINDOWS-titleBar-titleButton WINDOWS-titleBar-titleButton-${item}`}
+          style={{ width: titleButtons.length === 1 ? 31 : this.titleButtonWidth }}
+          onClick={() => { this.titleButtonAction(item) }} >
+          <div>{this.titleIcon[item]}</div>
+        </div>
+      }
+    })
   }
 
   titleBarMousedown(event: MouseEvent | TouchEvent) {
@@ -299,6 +306,9 @@ type ModalProps = {
 type ModalState = {
   visible?: boolean
 }
+/** Modal
+ * Modal设定为右上角功能区只有关闭这一个功能
+*/
 export class Modal extends React.PureComponent<ModalProps, ModalState> {
   footerHeight: number
   constructor(props: ModalProps) {
@@ -323,6 +333,7 @@ export class Modal extends React.PureComponent<ModalProps, ModalState> {
         width={this.props.width}
         visible={this.state.visible}
         onClose={this.onCancel.bind(this)}
+        titleBarActions={["close"]}
         height={((this.props.height || 0) + this.footerHeight)}>
         <div style={{
           height: this.props.height, width: "100%",

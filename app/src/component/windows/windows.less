@@ -30,60 +30,63 @@
 
     --titleHeight: 29px;
 
-    .WINDOWS-title {
-        vertical-align: top;
-        height: var(--titleHeight);
-        background-color: var(--themeTitleBackgroundColor);
-        color: var(--themeTitleColor);
-        padding-left: 7px;
-        line-height: 30px;
-        font-size: 12px;
-        width: 100%;
-        display: inline-block;
-    }
+    .WINDOWS-titleBar {
+        position: relative;
+        display: flex;
 
-    .WINDOWS-titleButton {
-        display: inline-block;
-        vertical-align: top;
-        height: var(--titleHeight);
-        background-color: var(--themeTitleBackgroundColor);
-
-        >div {
-            height: 100%;
+        .WINDOWS-titleBar-title {
+            vertical-align: top;
+            height: var(--titleHeight);
+            background-color: var(--themeTitleBackgroundColor);
+            color: var(--themeTitleColor);
+            padding-left: 7px;
+            line-height: 30px;
+            font-size: 12px;
             width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            display: inline-block;
         }
 
-        &:hover {
-            background-color: #E5E5E5;
-        }
+        .WINDOWS-titleBar-titleButton {
+            display: inline-block;
+            vertical-align: top;
+            height: var(--titleHeight);
+            background-color: var(--themeTitleBackgroundColor);
+            float: right;
 
-        &:active {
-            background-color: #CCCCCC
-        }
-
-        &.WINDOWS-titleButton-minimize {}
-
-        &.WINDOWS-titleButton-maximize {}
-
-        &.WINDOWS-titleButton-close {
-            // ::before {
-            //     content: "A";
-            // }
+            >div {
+                height: 100%;
+                width: 100%;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
 
             &:hover {
-                background-color: #E81123;
-
-                polygon {
-                    fill: white;
-                }
+                background-color: #E5E5E5;
             }
 
             &:active {
-                background-color: #F1707A
+                background-color: #CCCCCC
             }
+
+            &.WINDOWS-titleBar-titleButton-minimize {}
+
+            &.WINDOWS-titleBar-titleButton-maximize {}
+
+            &.WINDOWS-titleBar-titleButton-close {
+                &:hover {
+                    background-color: #E81123;
+
+                    polygon {
+                        fill: white;
+                    }
+                }
+
+                &:active {
+                    background-color: #F1707A
+                }
+            }
+
         }
     }
 
@@ -125,6 +128,7 @@
 
     ::-webkit-scrollbar-button {
         background-color: #F0F0F0;
+
         &:hover {
             background-color: #DADADA;
         }
